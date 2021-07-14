@@ -243,7 +243,7 @@ DockPage {
             tabifyPanel: pianoRollPanel
 
             Loader {
-                asynchronous: true
+                //asynchronous: true
                 sourceComponent: MixerPanel {}
             }
         },

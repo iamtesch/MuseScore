@@ -66,14 +66,23 @@ Item {
             }
 
             Row {
-                spacing: 2
 
-                VolumePressureMeter {
-                    currentVolumePressure: item.leftChannelPressure
+                spacing: 8
+
+                VolumeSlider {
+
                 }
 
-                VolumePressureMeter {
-                    currentVolumePressure: item.rightChannelPressure
+                Row {
+                    spacing: 2
+
+                    VolumePressureMeter {
+                        currentVolumePressure: item.leftChannelPressure
+                    }
+
+                    VolumePressureMeter {
+                        currentVolumePressure: item.rightChannelPressure
+                    }
                 }
             }
         }

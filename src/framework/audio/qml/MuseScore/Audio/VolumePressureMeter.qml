@@ -33,11 +33,8 @@ Canvas {
     property real minDisplayedVolumePressure: -60.0
     property real maxDisplayedVolumePressure: 0.0
 
-    width: 24
+    width: 6
     height: 140
-
-    renderStrategy: Canvas.Cooperative
-    renderTarget: Canvas.FramebufferObject
 
     QtObject {
         id: privateProperties
