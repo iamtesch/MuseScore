@@ -10242,5 +10242,6 @@
         ]
     },
     "supportedFamilies": [
+        "Strings"
     ]
 }

@@ -27,6 +27,7 @@
 
 namespace Ms {
 class Note;
+class Glissando;
 }
 
 namespace mu::engraving {
@@ -41,6 +42,8 @@ public:
 private:
     static void renderDiscreteGlissando(const Ms::Note* note, const RenderingContext& context, mpe::PlaybackEventList& result);
     static void renderContinuousGlissando(const Ms::Note* note, const RenderingContext& context, mpe::PlaybackEventList& result);
+
+    static const Ms::Glissando* attachedGlissando(const Ms::Note* note);
 };
 }
 

@@ -22,6 +22,8 @@
 
 #include "glissandosrenderer.h"
 
+#include "libmscore/glissando.h"
+
 using namespace mu::engraving;
 using namespace mu::mpe;
 
@@ -53,6 +55,8 @@ void GlissandosRenderer::doRender(const Ms::EngravingItem* item, const mpe::Arti
 void GlissandosRenderer::renderDiscreteGlissando(const Ms::Note* note, const RenderingContext& context,
                                                  mpe::PlaybackEventList& result)
 {
+    const Ms::Glissando* glissando = attachedGlissando(note);
+
     const mpe::ArticulationAppliedData& articulationData = context.commonArticulations.at(ArticulationType::DiscreteGlissando);
     int stepsCount = pitchStepsCount(articulationData.meta.overallPitchChangesRange);
     float durationStep = context.nominalDuration / static_cast<float>(stepsCount);
@@ -84,4 +88,19 @@ void GlissandosRenderer::renderContinuousGlissando(const Ms::Note* note, const R
     }
 
     result.emplace_back(buildNoteEvent(note, context));
+}
+
+const Ms::Glissando* GlissandosRenderer::attachedGlissando(const Ms::Note* note)
+{
+    IF_ASSERT_FAILED(note) {
+        return nullptr;
+    }
+
+    for (const Ms::Spanner* spanner : note->spannerFor()) {
+        if (spanner->isGlissando()) {
+            return Ms::toGlissando(spanner);
+        }
+    }
+
+    return nullptr;
 }
