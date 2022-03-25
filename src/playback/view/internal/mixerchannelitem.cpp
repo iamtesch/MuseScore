@@ -155,17 +155,6 @@ void MixerChannelItem::loadOutputParams(AudioOutputParams&& newParams)
         emit soloChanged();
     }
 
-    if (m_outParams.fxChain != newParams.fxChain) {
-        qDeleteAll(m_outputResourceItemList);
-        m_outputResourceItemList.clear();
-
-        for (int i = 0; i < OUTPUT_RESOURCE_COUNT_LIMIT; ++i) {
-            m_outputResourceItemList << buildOutputResourceItem(newParams.fxChain[i]);
-        }
-
-        emit outputResourceItemListChanged(m_outputResourceItemList);
-    }
-
     ensureBlankOutputResourceSlot();
 }
 
@@ -388,6 +377,10 @@ void MixerChannelItem::ensureBlankOutputResourceSlot()
         return;
     }
 
+    if (!m_outputResourceItemList.empty() && m_outputResourceItemList.last()->isBlank()) {
+        return;
+    }
+
     AudioFxParams params;
     params.chainOrder = m_outputResourceItemList.count();
     m_outputResourceItemList << buildOutputResourceItem(std::move(params));
@@ -402,6 +395,10 @@ QList<OutputResourceItem*> MixerChannelItem::emptySlotsToRemove() const
     for (OutputResourceItem* item : m_outputResourceItemList) {
         if (!item->isBlank()) {
             result.clear();
+            continue;
+        }
+
+        if (result.empty() && item == m_outputResourceItemList.last()) {
             continue;
         }
 
