@@ -46,6 +46,8 @@ class VstPlugin : public async::Asyncable
 public:
     VstPlugin(PluginModulePtr module);
 
+    ~VstPlugin() {}
+
     const std::string& name() const;
 
     PluginViewPtr view() const;
