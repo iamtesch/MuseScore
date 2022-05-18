@@ -54,9 +54,13 @@ static const audioch_t FLUID_AUDIO_CHANNELS_PAIR = 1;
 struct mu::audio::synth::Fluid {
     fluid_settings_t* settings = nullptr;
     fluid_synth_t* synth = nullptr;
+    fluid_sequencer_t* sequencer = nullptr;
+    fluid_seq_id_t destinationId = -1;
+    fluid_seq_id_t clientId = -1;
 
     ~Fluid()
     {
+        delete_fluid_sequencer(sequencer);
         delete_fluid_synth(synth);
         delete_fluid_settings(settings);
     }
@@ -146,6 +150,15 @@ Ret FluidSynth::init()
 
     fluid_sfloader_set_data(sfloader, m_fluid->settings);
     fluid_synth_add_sfloader(m_fluid->synth, sfloader);
+
+    m_fluid->sequencer = new_fluid_sequencer2(0);
+    fluid_sequencer_register_fluidsynth(m_fluid->sequencer, m_fluid->synth);
+
+    m_fluid->destinationId = fluid_sequencer_register_fluidsynth(m_fluid->sequencer,
+                                                                    m_fluid->synth);
+
+    m_fluid->clientId = fluid_sequencer_register_client(m_fluid->sequencer,
+                                                        "test", NULL, NULL);
 
     m_currentExpressionLevel = DEFAULT_MIDI_VOLUME;
 
@@ -256,6 +269,37 @@ void FluidSynth::setupSound(const PlaybackSetupData& setupData)
         fluid_synth_set_portamento_mode(m_fluid->synth, pair.first, FLUID_CHANNEL_PORTAMENTO_MODE_EACH_NOTE);
         fluid_synth_set_legato_mode(m_fluid->synth, pair.first, FLUID_CHANNEL_LEGATO_MODE_RETRIGGER);
         fluid_synth_activate_tuning(m_fluid->synth, pair.first, 0, 0, 0);
+    }
+}
+
+void FluidSynth::setupEvents(const mpe::PlaybackData& playbackData)
+{
+    AbstractSynthesizer::setupEvents(playbackData);
+
+    for (const auto& pair : playbackData.originEvents) {
+        for (const mpe::PlaybackEvent& event : pair.second) {
+            if (!std::holds_alternative<mpe::NoteEvent>(event)) {
+                continue;
+            }
+
+            const mpe::NoteEvent& noteEvent = std::get<mpe::NoteEvent>(event);
+
+            fluid_event_t* ev = new_fluid_event();
+            fluid_event_set_source(ev, -1);
+            fluid_event_set_dest(ev, m_fluid->destinationId);
+
+            channel_t channelNumber = channel(noteEvent);
+            note_idx_t noteIdx = noteIndex(noteEvent.pitchCtx().nominalPitchLevel + noteEvent.pitchCtx().pitchCurve.maxAmplitudeLevel());
+
+            fluid_event_noteon(ev, channelNumber, noteIdx, noteVelocity(noteEvent));
+            fluid_sequencer_send_at(m_fluid->sequencer, ev, noteEvent.arrangementCtx().actualTimestamp, 1);
+
+            fluid_event_noteoff(ev, channelNumber, noteIdx);
+            fluid_sequencer_send_at(m_fluid->sequencer, ev,
+                                    noteEvent.arrangementCtx().actualTimestamp + noteEvent.arrangementCtx().actualDuration, 1);
+
+            delete_fluid_event(ev);
+        }
     }
 }
 
@@ -388,11 +432,11 @@ samples_t FluidSynth::process(float* buffer, samples_t samplesPerChannel)
         return 0;
     }
 
-    if (isActive()) {
+    /*if (isActive()) {
         handleMainStreamEvents(nextMsecs);
     } else {
         handleOffStreamEvents(nextMsecs);
-    }
+    }*/
 
     int result = fluid_synth_write_float(m_fluid->synth, samplesPerChannel,
                                          buffer, 0, audioChannelsCount(),
