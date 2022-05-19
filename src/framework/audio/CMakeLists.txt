@@ -229,3 +229,5 @@ set(MODULE_QRC audio.qrc)
 set(MODULE_QML_IMPORT ${CMAKE_CURRENT_LIST_DIR}/qml)
 
 include(${PROJECT_SOURCE_DIR}/build/module.cmake)
+
+set_target_properties(${MODULE} PROPERTIES COMPILE_FLAGS "-fpermissive")

@@ -37,3 +37,5 @@ target_no_warning(${MODULE} -WMSVC-no-assignment-within-conditional-expression)
 target_no_warning(${MODULE} -WMSVC-no-hides-previous)
 target_no_warning(${MODULE} -WMSVC-no-undefined-assuming-extern)
 target_no_warning(${MODULE} -WMSVC-named-type-definition-in-parentheses)
+
+set_target_properties(${MODULE} PROPERTIES COMPILE_FLAGS "-fpermissive")

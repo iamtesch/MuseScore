@@ -32,6 +32,8 @@ extern "C" {
 #include <map>
 #include <string>
 
+#include <rvoice/fluid_rvoice_event.h>
+#include <synth/fluid_synth.h>
 #include <sfloader/fluid_sfont.h>
 #include <sfloader/fluid_defsfont.h>
 
@@ -43,6 +45,11 @@ struct SoundFontData
     fluid_sfont_t* soundFontPtr = nullptr;
     std::FILE* fileStream = nullptr;
 };
+
+void updateCurrentTick(fluid_synth_t* synth, fluid_atomic_uint_t samples)
+{
+    synth->ticks_since_start = samples;
+}
 
 struct SoundFontCache : public std::map<std::string, SoundFontData> {
     static SoundFontCache* instance()

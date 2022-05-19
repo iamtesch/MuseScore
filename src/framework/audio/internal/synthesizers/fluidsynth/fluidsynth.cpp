@@ -56,7 +56,6 @@ struct mu::audio::synth::Fluid {
     fluid_synth_t* synth = nullptr;
     fluid_sequencer_t* sequencer = nullptr;
     fluid_seq_id_t destinationId = -1;
-    fluid_seq_id_t clientId = -1;
 
     ~Fluid()
     {
@@ -155,10 +154,7 @@ Ret FluidSynth::init()
     fluid_sequencer_register_fluidsynth(m_fluid->sequencer, m_fluid->synth);
 
     m_fluid->destinationId = fluid_sequencer_register_fluidsynth(m_fluid->sequencer,
-                                                                    m_fluid->synth);
-
-    m_fluid->clientId = fluid_sequencer_register_client(m_fluid->sequencer,
-                                                        "test", NULL, NULL);
+                                                                 m_fluid->synth);
 
     m_currentExpressionLevel = DEFAULT_MIDI_VOLUME;
 
@@ -360,6 +356,14 @@ void FluidSynth::setIsActive(const bool isActive)
     toggleExpressionController();
 }
 
+void FluidSynth::setPlaybackPosition(const msecs_t newPosition)
+{
+    AbstractSynthesizer::setPlaybackPosition(newPosition);
+
+    m_fluid->synth->start = newPosition;
+    m_fluid->synth->ticks_since_start = 0;
+}
+
 void FluidSynth::midiChannelSoundsOff(channel_t chan)
 {
     IF_ASSERT_FAILED(m_fluid->synth) {
@@ -442,6 +446,10 @@ samples_t FluidSynth::process(float* buffer, samples_t samplesPerChannel)
                                          buffer, 0, audioChannelsCount(),
                                          buffer, 1, audioChannelsCount());
 
+    static samples_t pos = 0;
+    pos += samplesPerChannel;
+    updateCurrentTick(m_fluid->synth, pos);
+
     if (result != FLUID_OK) {
         return 0;
     }
@@ -476,7 +484,7 @@ void FluidSynth::handleMainStreamEvents(const msecs_t nextMsecs)
 
     handleAlreadyPlayingEvents(from, from + nextMsecs);
 
-    setPlaybackPosition(to);
+    m_playbackPosition = to;
 }
 
 void FluidSynth::handleOffStreamEvents(const msecs_t nextMsecs)

@@ -53,6 +53,8 @@ public:
     void flushSound() override;
     void setIsActive(const bool isActive) override;
 
+    void setPlaybackPosition(const msecs_t newPosition) override;
+
     bool hasAnythingToPlayback(const msecs_t from, const msecs_t to) const;
 
     void revokePlayingNotes() override; // all channels
