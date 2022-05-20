@@ -3,7 +3,7 @@
 using namespace mu::vst;
 using namespace mu::async;
 
-IMPLEMENT_FUNKNOWN_METHODS(VstComponentHandler, IComponentHandler, IComponentHandler::iid)
+DEF_CLASS_IID(VstComponentHandler);
 
 Channel<PluginParamId, PluginParamValue> VstComponentHandler::pluginParamChanged() const
 {
@@ -36,5 +36,31 @@ Steinberg::tresult VstComponentHandler::endEdit(Steinberg::Vst::ParamID /*id*/)
 
 Steinberg::tresult VstComponentHandler::restartComponent(Steinberg::int32 /*flags*/)
 {
+    m_paramsChangedNotify.notify();
+
+    return Steinberg::kResultOk;
+}
+
+Steinberg::tresult VstComponentHandler::setDirty(Steinberg::TBool /*state*/)
+{
+    m_paramsChangedNotify.notify();
+
+    return Steinberg::kResultOk;
+}
+
+Steinberg::tresult VstComponentHandler::requestOpenEditor(Steinberg::FIDString /*name*/)
+{
+    return Steinberg::kResultOk;
+}
+
+Steinberg::tresult VstComponentHandler::startGroupEdit()
+{
+    return Steinberg::kResultOk;
+}
+
+Steinberg::tresult VstComponentHandler::finishGroupEdit()
+{
+    m_paramsChangedNotify.notify();
+
     return Steinberg::kResultOk;
 }

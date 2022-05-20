@@ -33,7 +33,7 @@ static const std::string_view COMPONENT_STATE_KEY = "componentState";
 static const std::string_view CONTROLLER_STATE_KEY = "controllerState";
 
 VstPlugin::VstPlugin(PluginModulePtr module)
-    : m_module(std::move(module)), m_componentHandlerPtr(new VstComponentHandler())
+    : m_module(std::move(module)), m_componentHandlerPtr(VstComponentHandler::createInstance())
 {
     ONLY_AUDIO_THREAD(threadSecurer);
 
