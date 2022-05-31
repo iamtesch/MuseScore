@@ -66,7 +66,10 @@ static const std::unordered_map<mpe::ArticulationType, ms_NoteArticulation> ARTI
     { mpe::ArticulationType::GhostNote, ms_NoteArticulation_Ghost },
     { mpe::ArticulationType::CircleNote, ms_NoteArticulation_Circle },
     { mpe::ArticulationType::TriangleNote, ms_NoteArticulation_Triangle },
-    { mpe::ArticulationType::DiamondNote, ms_NoteArticulation_Diamond }
+    { mpe::ArticulationType::DiamondNote, ms_NoteArticulation_Diamond },
+
+    { mpe::ArticulationType::Pizzicato, ms_NoteArticulation_Pizzicato },
+    { mpe::ArticulationType::SnapPizzicato, ms_NoteArticulation_Pizzicato }
 };
 
 MuseSamplerWrapper::MuseSamplerWrapper(MuseSamplerLibHandlerPtr samplerLib, const audio::AudioSourceParams& params)
@@ -101,6 +104,8 @@ void MuseSamplerWrapper::setSampleRate(unsigned int sampleRate)
     if (m_samplerLib->initSampler(m_sampler, m_sampleRate, 1024, AUDIO_CHANNELS_COUNT) != ms_Result_OK) {
         LOGE() << "Unable to init MuseSampler";
         return;
+    } else {
+        LOGI() << "Successfully initialized sampler";
     }
 
     static std::array<float, 1024> left;
@@ -131,18 +136,14 @@ samples_t MuseSamplerWrapper::process(float* buffer, audio::samples_t samplesPer
         return 0;
     }
 
-    if (!isActive()) {
+    if (m_samplerLib->process(m_sampler, m_bus, m_currentPosition) != ms_Result_OK) {
         return 0;
     }
 
-    if (m_samplerLib->process(m_sampler, m_bus, m_playbackPosition) != ms_Result_OK) {
-        return 0;
+    if (m_isActive) {
+        extractOutputSamples(samplesPerChannel, buffer);
+        m_currentPosition += samplesPerChannel;
     }
-
-    extractOutputSamples(samplesPerChannel, buffer);
-
-    audio::msecs_t newPlaybackPosition = m_playbackPosition + samplesToMsecs(samplesPerChannel, m_sampleRate);
-    setPlaybackPosition(newPlaybackPosition);
 
     return samplesPerChannel;
 }
@@ -182,6 +183,8 @@ void MuseSamplerWrapper::setupSound(const mpe::PlaybackSetupData& setupData)
     if (instrumentList == nullptr) {
         LOGE() << "Unable to get instrument list";
         return;
+    } else {
+        LOGI() << "Successfully got instrument list";
     }
 
     int internalId = -1;
@@ -209,13 +212,68 @@ void MuseSamplerWrapper::setupSound(const mpe::PlaybackSetupData& setupData)
     m_track = m_samplerLib->addTrack(m_sampler, internalId);
 }
 
-void MuseSamplerWrapper::loadMainStreamEvents(const mpe::PlaybackEventsMap& events)
+void MuseSamplerWrapper::setupEvents(const mpe::PlaybackData& playbackData)
+{
+    ONLY_AUDIO_WORKER_THREAD;
+
+    m_mainStreamEvents.load(playbackData.originEvents);
+    m_mainStreamChanges = playbackData.mainStream;
+    m_offStreamChanges = playbackData.offStream;
+
+    m_dynamicLevelMap = playbackData.dynamicLevelMap;
+    m_dynamicLevelChanges = playbackData.dynamicLevelChanges;
+
+    reloadTrack();
+
+    m_mainStreamChanges.onReceive(this, [this](const mpe::PlaybackEventsMap& updatedEvents) {
+        m_mainStreamEvents.clear();
+        m_mainStreamEvents.load(updatedEvents);
+        reloadTrack();
+    });
+
+    m_offStreamChanges.onReceive(this, [this](const mpe::PlaybackEventsMap& triggeredEvents) {
+        loadOffStreamEvents(triggeredEvents);
+    });
+
+    m_dynamicLevelChanges.onReceive(this, [this](const mpe::DynamicLevelMap& dynamicLevelMap) {
+        m_dynamicLevelMap = dynamicLevelMap;
+        reloadTrack();
+    });
+}
+
+void MuseSamplerWrapper::seek(const audio::msecs_t newPosition)
+{
+    AbstractSynthesizer::seek(newPosition);
+
+    setCurrentPosition(msecsToSamples(newPosition, m_sampleRate));
+}
+
+void MuseSamplerWrapper::setIsActive(bool arg)
 {
     IF_ASSERT_FAILED(m_samplerLib && m_sampler && m_track) {
         return;
     }
 
-    m_samplerLib->clearTrack(m_sampler, m_track);
+    if (m_isActive == arg) {
+        return;
+    }
+
+    m_isActive = arg;
+
+    m_samplerLib->setPlaying(m_sampler, arg);
+
+    if (!m_isActive) {
+        setCurrentPosition(m_currentPosition);
+    }
+
+    LOGI() << "Toggled playing status, isPlaying: " << arg;
+}
+
+void MuseSamplerWrapper::loadMainStreamEvents(const mpe::PlaybackEventsMap& events)
+{
+    IF_ASSERT_FAILED(m_samplerLib && m_sampler && m_track) {
+        return;
+    }
 
     for (const auto& pair : events) {
         for (const auto& event : pair.second) {
@@ -228,10 +286,6 @@ void MuseSamplerWrapper::loadMainStreamEvents(const mpe::PlaybackEventsMap& even
             addNoteEvent(noteEvent);
         }
     }
-
-    if (m_samplerLib->finalizeScore(m_sampler) != ms_Result_OK) {
-        LOGE() << "Unable to finalize score";
-    }
 }
 
 void MuseSamplerWrapper::loadOffStreamEvents(const mpe::PlaybackEventsMap& events)
@@ -242,8 +296,37 @@ void MuseSamplerWrapper::loadOffStreamEvents(const mpe::PlaybackEventsMap& event
 
 void MuseSamplerWrapper::loadDynamicLevelChanges(const mpe::DynamicLevelMap& dynamicLevels)
 {
-    UNUSED(dynamicLevels);
-    NOT_IMPLEMENTED;
+    for (const auto& pair : dynamicLevels) {
+        m_samplerLib->addDynamicsEvent(m_sampler, m_track, { pair.first, dynamicLevelRatio(pair.second) });
+    }
+}
+
+void MuseSamplerWrapper::reloadTrack()
+{
+    IF_ASSERT_FAILED(m_samplerLib && m_sampler && m_track) {
+        return;
+    }
+
+    m_samplerLib->clearTrack(m_sampler, m_track);
+    LOGI() << "Requested to clear track";
+
+    loadMainStreamEvents(m_mainStreamEvents.events());
+    loadDynamicLevelChanges(m_dynamicLevelMap);
+
+    m_samplerLib->finalizeTrack(m_sampler, m_track);
+    LOGI() << "Requested to finalize track";
+}
+
+void MuseSamplerWrapper::setCurrentPosition(const audio::samples_t samples)
+{
+    IF_ASSERT_FAILED(m_samplerLib && m_sampler && m_track) {
+        return;
+    }
+
+    m_currentPosition = samples;
+    m_samplerLib->setPosition(m_sampler, m_currentPosition);
+
+    LOGI() << "Seek a new playback position, newPosition: " << m_currentPosition;
 }
 
 void MuseSamplerWrapper::extractOutputSamples(audio::samples_t samples, float* output)
@@ -269,10 +352,15 @@ void MuseSamplerWrapper::addNoteEvent(const mpe::NoteEvent& noteEvent)
     event._event._note._location_ms = noteEvent.arrangementCtx().nominalTimestamp;
     event._event._note._duration_ms = noteEvent.arrangementCtx().nominalDuration;
     event._event._note._pitch = pitchIndex(noteEvent.pitchCtx().nominalPitchLevel);
+    event._event._note._tempo = 0.0;
     event._event._note._articulation = noteArticulationTypes(noteEvent);
 
     if (m_samplerLib->addTrackEvent(m_sampler, m_track, event) != ms_Result_OK) {
         LOGE() << "Unable to add event for track";
+    } else {
+        LOGI() << "Successfully added note event, pitch: " << event._event._note._pitch
+               << ", timestamp: " << noteEvent.arrangementCtx().nominalTimestamp
+               << ", articulations flag: " << event._event._note._articulation;
     }
 }
 
@@ -294,6 +382,25 @@ int MuseSamplerWrapper::pitchIndex(const mpe::pitch_level_t pitchLevel) const
     float stepCount = MIN_SUPPORTED_NOTE + ((pitchLevel - MIN_SUPPORTED_LEVEL) / static_cast<float>(mpe::PITCH_LEVEL_STEP));
 
     return RealRound(stepCount, 0);
+}
+
+double MuseSamplerWrapper::dynamicLevelRatio(const mpe::dynamic_level_t level) const
+{
+    static constexpr mpe::dynamic_level_t MIN_SUPPORTED_LEVEL = mpe::dynamicLevelFromType(mpe::DynamicType::pppp);
+    static constexpr mpe::dynamic_level_t MAX_SUPPORTED_LEVEL = mpe::dynamicLevelFromType(mpe::DynamicType::ffff);
+
+    if (level <= MIN_SUPPORTED_LEVEL) {
+        return 0.0;
+    }
+
+    if (level >= MAX_SUPPORTED_LEVEL) {
+        return 1.0;
+    }
+
+    mpe::dynamic_level_t range = MAX_SUPPORTED_LEVEL - MIN_SUPPORTED_LEVEL;
+    mpe::dynamic_level_t diff = level - MIN_SUPPORTED_LEVEL;
+
+    return diff / static_cast<double>(range);
 }
 
 ms_NoteArticulation MuseSamplerWrapper::noteArticulationTypes(const mpe::NoteEvent& noteEvent) const

@@ -133,6 +133,13 @@ audio::msecs_t AbstractSynthesizer::samplesToMsecs(const samples_t samplesPerCha
     return samplesPerChannel * 1000 / sampleRate;
 }
 
+samples_t AbstractSynthesizer::msecsToSamples(const msecs_t msec, const samples_t sampleRate) const
+{
+    ONLY_AUDIO_WORKER_THREAD;
+
+    return (msec / 1000.f) * sampleRate;
+}
+
 msecs_t AbstractSynthesizer::actualPlaybackPositionStart() const
 {
     //!Note Some events might be started RIGHT before the "official" start of the track
@@ -147,7 +154,7 @@ audio::msecs_t mu::audio::synth::AbstractSynthesizer::playbackPosition() const
     return m_playbackPosition;
 }
 
-void AbstractSynthesizer::setPlaybackPosition(const msecs_t newPosition)
+void AbstractSynthesizer::seek(const msecs_t newPosition)
 {
     ONLY_AUDIO_WORKER_THREAD;
 
