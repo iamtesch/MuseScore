@@ -300,9 +300,9 @@ void PlaybackModel::updateEvents(const int tickFrom, const int tickTo, const tra
                     collectChangesTracks(trackId, trackChanges);
                 }
 
-                m_renderer.renderMetronome(m_score, segmentStartTick, segment->ticks().ticks(),
+                /*m_renderer.renderMetronome(m_score, segmentStartTick, segment->ticks().ticks(),
                                            tickPositionOffset, m_playbackDataMap[METRONOME_TRACK_ID].originEvents);
-                collectChangesTracks(METRONOME_TRACK_ID, trackChanges);
+                collectChangesTracks(METRONOME_TRACK_ID, trackChanges);*/
             }
         }
     }

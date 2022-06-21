@@ -93,7 +93,7 @@ void FluidSequencer::updatePlaybackEvents(EventSequenceMap& destination, const m
             destination[timestampTo].emplace(std::move(noteOff));
 
             appendControlSwitch(destination, noteEvent, PEDAL_CC_SUPPORTED_TYPES, 64);
-            appendControlSwitch(destination, noteEvent, LEGATO_CC_SUPPORTED_TYPES, 68);
+            //appendControlSwitch(destination, noteEvent, LEGATO_CC_SUPPORTED_TYPES, 68);
             appendPitchBend(destination, noteEvent, BEND_SUPPORTED_TYPES, channelIdx);
         }
     }
@@ -115,17 +115,27 @@ void FluidSequencer::appendControlSwitch(EventSequenceMap& destination, const mp
         const ArticulationAppliedData& articulationData = noteEvent.expressionCtx().articulations.at(currentType);
         const ArticulationMeta& articulationMeta = articulationData.meta;
 
+        EventSequence& startSequence = destination[articulationMeta.timestamp];
+        EventSequence& endSequence = destination[articulationMeta.timestamp + articulationMeta.overallDuration];
+
         midi::Event start(Event::Opcode::ControlChange, Event::MessageType::ChannelVoice10);
         start.setIndex(midiControlIdx);
         start.setData(127);
 
-        destination[articulationMeta.timestamp].emplace(std::move(start));
+        auto startSearch = std::find(startSequence.cbegin(), startSequence.cend(), start);
+        if (startSearch == startSequence.cend()) {
+            startSequence.emplace(std::move(start));
+        }
 
         midi::Event end(Event::Opcode::ControlChange, Event::MessageType::ChannelVoice10);
         end.setIndex(midiControlIdx);
         end.setData(0);
 
-        destination[articulationMeta.timestamp + articulationMeta.overallDuration].emplace(std::move(end));
+        auto endSearch = std::find(endSequence.cbegin(), endSequence.cend(), end);
+        if (endSearch == endSequence.cend()) {
+            endSequence.emplace(std::move(end));
+        }
+
     } else {
         midi::Event cc(Event::Opcode::ControlChange, Event::MessageType::ChannelVoice10);
         cc.setIndex(midiControlIdx);
