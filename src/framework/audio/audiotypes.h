@@ -36,7 +36,7 @@
 #include "async/channel.h"
 
 namespace mu::audio {
-using msecs_t = int64_t;
+//using msecs_t = int64_t;
 using secs_t = int64_t;
 using samples_t = uint64_t;
 using sample_rate_t = uint64_t;
@@ -58,6 +58,33 @@ using AudioResourceId = std::string;
 using AudioResourceIdList = std::vector<AudioResourceId>;
 using AudioResourceVendor = std::string;
 using AudioUnitConfig = std::map<std::string, std::string>;
+
+
+struct msecs_t
+{
+    double m_val = 0.0;
+
+    constexpr msecs_t(int v)
+        : m_val(static_cast<double>(v)) {}
+
+    constexpr msecs_t(double v)
+        : m_val(v) {}
+
+    constexpr msecs_t(long v)
+        : m_val(static_cast<double>(v)) {}
+
+    constexpr inline msecs_t& operator+=(const msecs_t& v) { m_val += v.m_val; return *this; }
+    constexpr inline msecs_t& operator-=(const msecs_t& v) { m_val -= v.m_val; return *this; }
+    constexpr inline msecs_t& operator/=(const msecs_t& v) { m_val += v.m_val; return *this; }
+    constexpr inline msecs_t& operator*=(const msecs_t& v) { m_val *= v.m_val; return *this; }
+    constexpr inline msecs_t operator+(const msecs_t& v) { return msecs_t(m_val + v.m_val); }
+    constexpr inline msecs_t operator-(const msecs_t& v) { return msecs_t(m_val - v.m_val); }
+    constexpr inline msecs_t operator/(const msecs_t& v) { return msecs_t(m_val / v.m_val); }
+    constexpr inline msecs_t operator*(const msecs_t& v) { return msecs_t(m_val * v.m_val); }
+    constexpr inline bool operator<(const msecs_t& other) { return m_val < other.m_val; }
+    constexpr inline bool operator>(const msecs_t& other) { return !operator<(other); }
+    constexpr inline bool operator==(const msecs_t& other) { return RealIsEqual(m_val, other.m_val); }
+};
 
 enum class AudioResourceType {
     Undefined = -1,

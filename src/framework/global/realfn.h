@@ -59,7 +59,7 @@ constexpr double COMPARE_DOUBLE_NULL(0.000000001);
 constexpr float COMPARE_FLOAT_EPSILON(1000000.0);
 constexpr float COMPARE_FLOAT_NULL(0.000001F);
 
-inline bool RealIsEqual(double p1, double p2)
+constexpr inline bool RealIsEqual(double p1, double p2)
 {
     return std::abs(p1 - p2) * COMPARE_DOUBLE_EPSILON <= std::min(std::abs(p1), std::abs(p2));
 }
