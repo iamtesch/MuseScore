@@ -47,6 +47,7 @@ typedef int (* ms_get_version_revision)();
 /*\\\ TYPES \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
 
 typedef void* ms_MuseSampler;
+typedef void* ms_PresetList;
 typedef void* ms_InstrumentList;
 typedef void* ms_InstrumentInfo;
 typedef void* ms_Track;
@@ -60,7 +61,8 @@ typedef struct ms_OutputBuffer
 
 typedef struct ms_DynamicsEvent
 {
-    // TODO
+  long _location_ms;
+  double _value; // 0.0 - 1.0
 } ms_DynamicsEvent;
 
 enum ms_NoteArticulation : uint64_t
@@ -103,27 +105,12 @@ enum ms_NoteArticulation : uint64_t
     ms_NoteArticulation_Circle = 1LL << 34,
     ms_NoteArticulation_Triangle = 1LL << 35,
     ms_NoteArticulation_Diamond = 1LL << 36,
-};
-
-enum ms_TwoNoteArticulation : uint64_t
-{
-    ms_TwoNoteArticulation_None = 0,
-    ms_TwoNoteArticulation_TwoNoteTremolo = 1LL << 1,
-    ms_TwoNoteArticulation_Glissando = 1LL << 2,
-    ms_TwoNoteArticulation_Portamento = 1LL << 3,
-};
-
-enum ms_RangeArticulation : uint64_t
-{
-    ms_RangeArticulation_None = 0,
-    ms_RangeArticulation_Slur = 1LL << 1,
-    ms_RangeArticulation_Pedal = 1LL << 2,
-};
-
-enum ms_EventType
-{
-    ms_EventTypeNote = 0,
-    ms_EventTypeSlur = 1
+    ms_NoteArticulation_Portamento = 1LL << 37,
+    ms_NoteArticulation_Pizzicato = 1LL << 38,
+    ms_NoteArticulation_TwoNoteTremolo = 1LL << 39,
+    ms_NoteArticulation_Glissando = 1LL << 40,
+    ms_NoteArticulation_Pedal = 1LL << 41,
+    ms_NoteArticulation_Slur = 1LL << 42,
 };
 
 typedef struct ms_NoteEvent
@@ -132,37 +119,10 @@ typedef struct ms_NoteEvent
     long _location_ms;
     long _duration_ms;
     int _pitch; // MIDI pitch
+    double _tempo;
     ms_NoteArticulation _articulation;
 } ms_NoteEvent;
 
-typedef struct ms_TwoNoteArticulationEvent
-{
-    int _voice; // 0-3
-    long _second_note_location_ms;
-    ms_TwoNoteArticulation _articulation;
-} ms_TwoNoteArticulationEvent;
-
-typedef struct ms_RangeArticulationEvent
-{
-    int _voice; // 0-3
-    long _start_location_ms;
-    long _end_location_ms;
-    ms_RangeArticulation _articulation;
-} ms_RangeArticulationEvent;
-
-typedef struct ms_Event
-{
-    ms_EventType _event_type;
-    union
-    {
-        ms_NoteEvent _note;
-        // Notes must both already exist in the given voice
-        ms_TwoNoteArticulationEvent _two_note_articulation;
-        // Range of notes must already exist, and notes must exist starting at
-        // start and ending at end of marked range.
-        ms_RangeArticulationEvent _range_articulation;
-    } _event;
-} ms_Event;
 
 typedef ms_Result (* ms_init)();
 typedef ms_InstrumentList (* ms_get_instrument_list)();
@@ -171,6 +131,10 @@ typedef ms_InstrumentInfo (* ms_InstrumentList_get_next)(ms_InstrumentList instr
 typedef int (* ms_Instrument_get_id)(ms_InstrumentInfo instrument);
 typedef const char*(* ms_Instrument_get_name)(ms_InstrumentInfo);
 typedef const char*(* ms_Instrument_get_musicxml_sound)(ms_InstrumentInfo);
+typedef const char*(* ms_Instrument_get_mpe_sound)(ms_InstrumentInfo);
+
+typedef ms_PresetList(* ms_Instrument_get_preset_list)(ms_InstrumentInfo);
+typedef const char*(* ms_PresetList_get_next)(ms_PresetList);
 
 typedef ms_MuseSampler (* ms_MuseSampler_create)();
 typedef void (* ms_MuseSampler_destroy)(ms_MuseSampler);
@@ -180,10 +144,18 @@ typedef ms_Result (* ms_MuseSampler_set_demo_score)(ms_MuseSampler ms);
 typedef ms_Result (* ms_MuseSampler_clear_score)(ms_MuseSampler ms);
 typedef ms_Result (* ms_MuseSampler_finalize_score)(ms_MuseSampler ms);
 typedef ms_Track (* ms_MuseSampler_add_track)(ms_MuseSampler ms, int instrument_id);
+typedef ms_Result (* ms_MuseSampler_finalize_track)(ms_MuseSampler ms, ms_Track track);
 typedef ms_Result (* ms_MuseSampler_clear_track)(ms_MuseSampler ms, ms_Track track);
 
-typedef ms_Result (* ms_MuseSampler_add_dynamics_event)(ms_MuseSampler ms, ms_DynamicsEvent evt);
-typedef ms_Result (* ms_MuseSampler_add_track_event)(ms_MuseSampler ms, ms_Track track, ms_Event evt);
+typedef ms_Result (* ms_MuseSampler_add_track_note_event)(ms_MuseSampler ms, ms_Track track, ms_NoteEvent evt);
+typedef ms_Result (* ms_MuseSampler_add_track_dynamics_event)(ms_MuseSampler ms, ms_Track track, ms_DynamicsEvent evt);
+
+typedef int (* ms_MuseSampler_is_ranged_articulation)(ms_MuseSampler ms, ms_NoteArticulation);
+typedef ms_Result (* ms_MuseSampler_add_track_event_range_start)(ms_MuseSampler ms, ms_Track);
+typedef ms_Result (* ms_MuseSampler_add_track_event_range_end)(ms_MuseSampler ms, ms_Track);
+
 typedef ms_Result (* ms_MuseSampler_process)(ms_MuseSampler, ms_OutputBuffer, long long micros);
+typedef void (*ms_MuseSampler_set_position)(ms_MuseSampler, long long micros);
+typedef void (*ms_MuseSampler_set_playing)(ms_MuseSampler, int playing);
 
 #endif // MU_MUSESAMPLER_APITYPES_H
