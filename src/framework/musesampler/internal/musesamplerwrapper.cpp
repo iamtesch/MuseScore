@@ -345,22 +345,21 @@ void MuseSamplerWrapper::addNoteEvent(const mpe::NoteEvent& noteEvent)
         return;
     }
 
-    ms_Event event;
-    event._event_type = ms_EventTypeNote;
-    event._event._note = ms_NoteEvent();
-    event._event._note._voice = noteEvent.arrangementCtx().voiceLayerIndex;
-    event._event._note._location_ms = noteEvent.arrangementCtx().nominalTimestamp;
-    event._event._note._duration_ms = noteEvent.arrangementCtx().nominalDuration;
-    event._event._note._pitch = pitchIndex(noteEvent.pitchCtx().nominalPitchLevel);
-    event._event._note._tempo = 0.0;
-    event._event._note._articulation = noteArticulationTypes(noteEvent);
+    ms_NoteEvent event{};
+    event._voice = noteEvent.arrangementCtx().voiceLayerIndex;
+    event._location_ms = noteEvent.arrangementCtx().nominalTimestamp;
+    event._duration_ms = noteEvent.arrangementCtx().nominalDuration;
+    event._pitch = pitchIndex(noteEvent.pitchCtx().nominalPitchLevel);
+    event._tempo = 0.0;
+    event._articulation = noteArticulationTypes(noteEvent);
 
-    if (m_samplerLib->addTrackEvent(m_sampler, m_track, event) != ms_Result_OK) {
+    if (m_samplerLib->addNoteEvent(m_sampler, m_track, event) != ms_Result_OK) {
         LOGE() << "Unable to add event for track";
     } else {
-        LOGI() << "Successfully added note event, pitch: " << event._event._note._pitch
-               << ", timestamp: " << noteEvent.arrangementCtx().nominalTimestamp
-               << ", articulations flag: " << event._event._note._articulation;
+        LOGI() << "Successfully added note event, pitch: " << event._pitch
+               << ", timestamp: " << event._location_ms
+               << ", duration: " << event._duration_ms
+               << ", articulations flag: " << event._articulation;
     }
 }
 
