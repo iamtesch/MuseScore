@@ -60,14 +60,14 @@ struct MuseSamplerLibHandler
     ms_Result clearTrack(ms_MuseSampler ms, ms_Track track) { return ms_MuseSampler_clear_track(ms, track); }
 
     ms_Result addDynamicsEvent(ms_MuseSampler ms, ms_Track track, ms_DynamicsEvent evt) { return ms_MuseSampler_add_track_dynamics_event(ms, track, evt); }
-    ms_Result addTrackEvent(ms_MuseSampler ms, ms_Track track, ms_Event evt) { return ms_MuseSampler_add_track_event(ms, track, evt); }
+    ms_Result addNoteEvent(ms_MuseSampler ms, ms_Track track, ms_Event evt) { return ms_MuseSampler_add_track_note_event(ms, track, evt); }
 
-    bool isRangedArticulation(ms_MuseSampler ms, ms_NoteArticulation art) { return ms_MuseSampler_is_ranged_articulation(ms, art); }
+    bool isRangedArticulation(ms_MuseSampler ms, ms_NoteArticulation art) { return ms_MuseSampler_is_ranged_articulation(ms, art) == 1; }
     ms_Result addTrackEventRangeStart(ms_MuseSampler ms, ms_Track track) { return ms_MuseSampler_add_track_event_range_start(ms, track); }
     ms_Result addTrackEventRangeEnd(ms_MuseSampler ms, ms_Track track) { return ms_MuseSampler_add_track_event_range_end(ms, track); }
 
     void setPosition(ms_MuseSampler ms, long long micros) { return ms_MuseSampler_set_position(ms, micros); }
-    void setPlaying(ms_MuseSampler ms, bool playing) { return ms_MuseSampler_set_playing(ms, playing); }
+    void setPlaying(ms_MuseSampler ms, bool playing) { return ms_MuseSampler_set_playing(ms, playing ? 1 : 0); }
     ms_Result process(ms_MuseSampler ms, ms_OutputBuffer buff, long long micros) { return ms_MuseSampler_process(ms, buff, micros); }
 
     bool containsInstrument(const char* musicXmlSoundId)
@@ -121,7 +121,7 @@ struct MuseSamplerLibHandler
     ms_MuseSampler_clear_track clearTrack = nullptr;
 
     ms_MuseSampler_add_track_dynamics_event addDynamicsEvent = nullptr;
-    ms_MuseSampler_add_track_event addTrackEvent = nullptr;
+    ms_MuseSampler_add_track_note_event addNoteEvent = nullptr;
     ms_MuseSampler_is_ranged_articulation isRangedArticulation = nullptr;
     ms_MuseSampler_add_track_event_range_start addTrackEventRangeStart = nullptr;
     ms_MuseSampler_add_track_event_range_end addTrackEventRangeEnd = nullptr;
@@ -193,7 +193,7 @@ struct MuseSamplerLibHandler
         clearTrack = (ms_MuseSampler_clear_track)dlsym(m_lib, "ms_MuseSampler_clear_track");
 
         addDynamicsEvent = (ms_MuseSampler_add_track_dynamics_event)dlsym(m_lib, "ms_MuseSampler_add_track_dynamics_event");
-        addTrackEvent = (ms_MuseSampler_add_track_event)dlsym(m_lib, "ms_MuseSampler_add_track_event");
+        addNoteEvent = (ms_MuseSampler_add_track_note_event)dlsym(m_lib, "ms_MuseSampler_add_track_note_event");
 
         isRangedArticulation = (ms_MuseSampler_is_ranged_articulation)dlsym(m_lib, "ms_MuseSampler_is_ranged_articulation");
         addTrackEventRangeStart = (ms_MuseSampler_add_track_event_range_start)dlsym(m_lib, "ms_MuseSampler_add_track_event_range_start");
@@ -235,12 +235,12 @@ struct MuseSamplerLibHandler
                && finalizeTrack
                && clearTrack
                && addDynamicsEvent
-               && addTrackEvent
+               && addNoteEvent
                && setPosition
                && setPlaying
-               //&& isRangedArticulation
-               //&& addTrackEventRangeStart
-               //&& addTrackEventRangeEnd
+               && isRangedArticulation
+               && addTrackEventRangeStart
+               && addTrackEventRangeEnd
                && process;
     }
 
@@ -263,7 +263,7 @@ private:
                << "\n ms_MuseSampler_add_track - " << reinterpret_cast<uint64_t>(addTrack)
                << "\n ms_MuseSampler_finalize_track - " << reinterpret_cast<uint64_t>(finalizeTrack)
                << "\n ms_MuseSampler_add_track_dynamics_event - " << reinterpret_cast<uint64_t>(addDynamicsEvent)
-               << "\n ms_MuseSampler_add_track_event - " << reinterpret_cast<uint64_t>(addTrackEvent)
+               << "\n ms_MuseSampler_add_track_note_event - " << reinterpret_cast<uint64_t>(addNoteEvent)
                << "\n ms_MuseSampler_set_position - " << reinterpret_cast<uint64_t>(setPosition)
                << "\n ms_MuseSampler_set_playing - " << reinterpret_cast<uint64_t>(setPlaying)
                << "\n ms_MuseSampler_process - " << reinterpret_cast<uint64_t>(process);
