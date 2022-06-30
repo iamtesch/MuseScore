@@ -49,16 +49,25 @@ public:
 
 protected:
     void setupSound(const mpe::PlaybackSetupData& setupData) override;
+    void setupEvents(const mpe::PlaybackData& playbackData) override;
+
+    void seek(const audio::msecs_t newPosition) override;
+    void setIsActive(bool arg) override;
 
     void loadMainStreamEvents(const mpe::PlaybackEventsMap& events) override;
     void loadOffStreamEvents(const mpe::PlaybackEventsMap& events) override;
     void loadDynamicLevelChanges(const mpe::DynamicLevelMap& dynamicLevels) override;
 
+    void reloadTrack();
+
+    void setCurrentPosition(const audio::samples_t samples);
     void extractOutputSamples(audio::samples_t samples, float* output);
     void addNoteEvent(const mpe::NoteEvent& noteEvent);
     int pitchIndex(const mpe::pitch_level_t pitchLevel) const;
+    double dynamicLevelRatio(const mpe::dynamic_level_t level) const;
 
     ms_NoteArticulation noteArticulationTypes(const mpe::NoteEvent& noteEvent) const;
+
 
     async::Channel<unsigned int> m_audioChannelsCountChanged;
 
@@ -66,6 +75,8 @@ protected:
     ms_MuseSampler m_sampler = nullptr;
     ms_Track m_track = nullptr;
     ms_OutputBuffer m_bus;
+
+    audio::samples_t m_currentPosition = 0;
 };
 
 using MuseSamplerWrapperPtr = std::shared_ptr<MuseSamplerWrapper>;

@@ -41,16 +41,7 @@ MuseSamplerResolver::MuseSamplerResolver()
 
 ISynthesizerPtr MuseSamplerResolver::resolveSynth(const audio::TrackId trackId, const audio::AudioInputParams& params) const
 {
-    auto search = m_samplersMap.find(trackId);
-
-    if (search != m_samplersMap.cend()) {
-        return search->second;
-    }
-
-    MuseSamplerWrapperPtr sampler = std::make_shared<MuseSamplerWrapper>(m_libHandler, params);
-    m_samplersMap.emplace(trackId, sampler);
-
-    return sampler;
+    return std::make_shared<MuseSamplerWrapper>(m_libHandler, params);
 }
 
 bool MuseSamplerResolver::hasCompatibleResources(const audio::PlaybackSetupData& setup) const
