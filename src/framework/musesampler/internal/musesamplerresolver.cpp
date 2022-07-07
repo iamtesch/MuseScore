@@ -82,12 +82,13 @@ AudioResourceMetaList MuseSamplerResolver::resolveResources() const
     while (auto instrument = m_libHandler->getNextInstrument(instrumentList))
     {
         const char* internalName = m_libHandler->getInstrumentName(instrument);
-        const char* instrumentPack = m_libHandler->getInstrumentPackage(instrument);
+        const char* internalCategory = m_libHandler->getInstrumentCategory(instrument);
+
         result.push_back(
         {
             internalName, // id
             AudioResourceType::MuseSamplerSoundPack, // type
-            instrumentPack, // vendor
+            internalCategory, // vendor
             /*hasNativeEditorSupport*/ false
         });
     }

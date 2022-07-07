@@ -50,6 +50,7 @@ struct MuseSamplerLibHandler
     ms_InstrumentInfo getNextInstrument(ms_InstrumentList instrument_list) { return ms_InstrumentList_get_next(instrument_list); }
     int getInstrumentId(ms_InstrumentInfo instrument) { return ms_Instrument_get_id(instrument); }
     const char* getInstrumentName(ms_InstrumentInfo instrument) { return ms_Instrument_get_name(instrument); }
+    const char* getInstrumentCategory(ms_InstrumentInfo instrument) { return ms_Instrument_get_category(instrument); }
     const char* getInstrumentPackage(ms_InstrumentInfo instrument) { return ms_Instrument_get_package(instrument); }
     const char* getMusicXmlSoundId(ms_InstrumentInfo instrument) { return ms_Instrument_get_musicxml_sound(instrument); }
     const char* getMpeSoundId(ms_InstrumentInfo instrument) { return ms_Instrument_get_mpe_sound(instrument); }
@@ -111,6 +112,7 @@ struct MuseSamplerLibHandler
     ms_InstrumentList_get_next getNextInstrument = nullptr;
     ms_Instrument_get_id getInstrumentId = nullptr;
     ms_Instrument_get_name getInstrumentName = nullptr;
+    ms_Instrument_get_category getInstrumentCategory = nullptr;
     ms_Instrument_get_package getInstrumentPackage = nullptr;
     ms_Instrument_get_musicxml_sound getMusicXmlSoundId = nullptr;
     ms_Instrument_get_mpe_sound getMpeSoundId = nullptr;
@@ -154,6 +156,7 @@ struct MuseSamplerLibHandler
         getNextInstrument = (ms_InstrumentList_get_next)dlsym(m_lib, "ms_InstrumentList_get_next");
         getInstrumentId = (ms_Instrument_get_id)dlsym(m_lib, "ms_Instrument_get_id");
         getInstrumentName = (ms_Instrument_get_name)dlsym(m_lib, "ms_Instrument_get_name");
+        getInstrumentCategory = (ms_Instrument_get_category)dlsym(m_lib, "ms_Instrument_get_category");
         getInstrumentPackage = (ms_Instrument_get_package)dlsym(m_lib, "ms_Instrument_get_package");
         getMusicXmlSoundId = (ms_Instrument_get_musicxml_sound)dlsym(m_lib, "ms_Instrument_get_musicxml_sound");
         getMpeSoundId = (ms_Instrument_get_mpe_sound)dlsym(m_lib, "ms_Instrument_get_mpe_sound");
@@ -204,6 +207,7 @@ struct MuseSamplerLibHandler
                && getNextInstrument
                && getInstrumentId
                && getInstrumentName
+               && getInstrumentCategory
                && getInstrumentPackage
                && getMusicXmlSoundId
                && getMpeSoundId
@@ -237,6 +241,7 @@ private:
                << "\n ms_InstrumentList_get_next - " << reinterpret_cast<uint64_t>(getNextInstrument)
                << "\n ms_Instrument_get_id - " << reinterpret_cast<uint64_t>(getInstrumentId)
                << "\n ms_Instrument_get_name - " << reinterpret_cast<uint64_t>(getInstrumentName)
+               << "\n ms_Instrument_get_category - " << reinterpret_cast<uint64_t>(getInstrumentCategory)
                << "\n ms_Instrument_get_package - " << reinterpret_cast<uint64_t>(getInstrumentPackage)
                << "\n ms_Instrument_get_musicxml_sound - " << reinterpret_cast<uint64_t>(getMusicXmlSoundId)
                << "\n ms_Instrument_get_mpe_sound - " << reinterpret_cast<uint64_t>(getMpeSoundId)

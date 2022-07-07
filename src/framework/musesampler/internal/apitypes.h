@@ -135,6 +135,7 @@ typedef ms_InstrumentInfo (* ms_InstrumentList_get_next)(ms_InstrumentList instr
 
 typedef int (* ms_Instrument_get_id)(ms_InstrumentInfo instrument);
 typedef const char*(* ms_Instrument_get_name)(ms_InstrumentInfo);
+typedef const char*(* ms_Instrument_get_category)(ms_InstrumentInfo);
 typedef const char*(* ms_Instrument_get_package)(ms_InstrumentInfo);
 typedef const char*(* ms_Instrument_get_musicxml_sound)(ms_InstrumentInfo);
 typedef const char*(* ms_Instrument_get_mpe_sound)(ms_InstrumentInfo);
