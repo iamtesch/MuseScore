@@ -47,6 +47,8 @@ public:
     void flushSound() override;
     bool isValid() const override;
 
+    void resetAudioParams(const audio::AudioSourceParams& params);
+
 protected:
     void setupSound(const mpe::PlaybackSetupData& setupData) override;
     void setupEvents(const mpe::PlaybackData& playbackData) override;
@@ -75,6 +77,9 @@ protected:
     ms_MuseSampler m_sampler = nullptr;
     ms_Track m_track = nullptr;
     ms_OutputBuffer m_bus;
+
+    std::string m_instrument_vendor;
+    std::string m_instrument_name;
 
     audio::samples_t m_currentPosition = 0;
 };

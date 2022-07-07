@@ -41,6 +41,7 @@ struct MuseSamplerLibHandler
     {
         return ms_contains_instrument(mpe_id, musicxml) == 1;
     }
+    int getMatchingInstrumentId(const char* pack, const char* name) { reutrn ms_get_matching_instrument_id(pack, name); }
     ms_InstrumentList getInstrumentList() { return ms_get_instrument_list(); }
     ms_InstrumentList getMatchingInstrumentList(const char* mpe_id, const char* musicxml)
     {
@@ -104,6 +105,7 @@ struct MuseSamplerLibHandler
     ms_init initLib = nullptr;
     ms_contains_instrument containsInstrument = nullptr;
 
+    ms_get_matching_instrument_id getMatchingInstrumentId = nullptr;
     ms_get_instrument_list getInstrumentList = nullptr;
     ms_get_matching_instrument_list getMatchingInstrumentList = nullptr;
     ms_InstrumentList_get_next getNextInstrument = nullptr;
@@ -146,6 +148,7 @@ struct MuseSamplerLibHandler
 
         initLib = (ms_init)dlsym(m_lib, "ms_init");
         containsInstrument = (ms_contains_instrument)dlsym(m_lib, "ms_contains_instrument");
+        getMatchingInstrumentId = (ms_get_matching_instrument_id)dlsym(m_lib, "ms_get_matching_instrument_id");
         getInstrumentList = (ms_get_instrument_list)dlsym(m_lib, "ms_get_instrument_list");
         getMatchingInstrumentList = (ms_get_matching_instrument_list)dlsym(m_lib, "ms_get_matching_instrument_list");
         getNextInstrument = (ms_InstrumentList_get_next)dlsym(m_lib, "ms_InstrumentList_get_next");
@@ -195,6 +198,7 @@ struct MuseSamplerLibHandler
         return m_lib
                && initLib
                && containsInstrument
+               && getMatchingInstrumentId
                && getInstrumentList
                && getMatchingInstrumentList
                && getNextInstrument
@@ -227,6 +231,7 @@ private:
     {
         LOGI() << "MuseSampler API status:"
                << "\n ms_contains_instrument -" << reinterpret_cast<uint64_t>(containsInstrument)
+               << "\n ms_get_matching_instrument_id -" << reinterpret_cast<uint64_t>(getMatchingInstrumentId)
                << "\n ms_get_instrument_list -" << reinterpret_cast<uint64_t>(getInstrumentList)
                << "\n ms_get_matching_instrument_list -" << reinterpret_cast<uint64_t>(getMatchingInstrumentList)
                << "\n ms_InstrumentList_get_next - " << reinterpret_cast<uint64_t>(getNextInstrument)

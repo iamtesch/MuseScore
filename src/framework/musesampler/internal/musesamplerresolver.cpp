@@ -45,6 +45,11 @@ ISynthesizerPtr MuseSamplerResolver::resolveSynth(const audio::TrackId trackId, 
     auto search = m_samplersMap.find(trackId);
 
     if (search != m_samplersMap.cend()) {
+        // Update the sounds:
+        // TODO: this isn't pretty, but we lose the relevant bits here when "setupSound" is called.
+        auto msw = dynamic_cast<MuseSamplerWrapper*>(search->second.get());
+        if (msw != nullptr)
+            msw->resetAudioParams(params);
         return search->second;
     }
 
@@ -56,6 +61,7 @@ ISynthesizerPtr MuseSamplerResolver::resolveSynth(const audio::TrackId trackId, 
 
 bool MuseSamplerResolver::hasCompatibleResources(const audio::PlaybackSetupData& setup) const
 {
+    return true;
     if (!m_libHandler) {
         return false;
     }
@@ -70,14 +76,21 @@ bool MuseSamplerResolver::hasCompatibleResources(const audio::PlaybackSetupData&
 
 AudioResourceMetaList MuseSamplerResolver::resolveResources() const
 {
-    static AudioResourceMetaList result {
+    AudioResourceMetaList result;
+
+    auto instrumentList = m_libHandler->getInstrumentList();
+    while (auto instrument = m_libHandler->getNextInstrument(instrumentList))
+    {
+        const char* internalName = m_libHandler->getInstrumentName(instrument);
+        const char* instrumentPack = m_libHandler->getInstrumentPackage(instrument);
+        result.push_back(
         {
-            "Muse Sounds",
-            AudioResourceType::MuseSamplerSoundPack,
-            "Muse",
+            internalName, // id
+            AudioResourceType::MuseSamplerSoundPack, // type
+            instrumentPack, // vendor
             /*hasNativeEditorSupport*/ false
-        }
-    };
+        });
+    }
 
     return result;
 }

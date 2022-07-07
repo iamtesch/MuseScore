@@ -87,13 +87,20 @@ static const std::unordered_map<mpe::ArticulationType, ms_NoteArticulation> ARTI
 };
 
 MuseSamplerWrapper::MuseSamplerWrapper(MuseSamplerLibHandlerPtr samplerLib, const audio::AudioSourceParams& params)
-    : AbstractSynthesizer(params), m_samplerLib(samplerLib)
+    : AbstractSynthesizer(params), m_samplerLib(samplerLib), m_instrument_vendor(params.resourceMeta.vendor),
+      m_instrument_name(params.resourceMeta.id)
 {
     if (!m_samplerLib || !m_samplerLib->isValid()) {
         return;
     }
 
     m_samplerLib->initLib();
+}
+
+void MuseSamplerWrapper::resetAudioParams(const audio::AudioSourceParams& params)
+{
+    m_instrument_vendor = params.resourceMeta.vendor;
+    m_instrument_name = params.resourceMeta.id;
 }
 
 MuseSamplerWrapper::~MuseSamplerWrapper()
@@ -184,6 +191,13 @@ bool MuseSamplerWrapper::isValid() const
 
 void MuseSamplerWrapper::setupSound(const mpe::PlaybackSetupData& setupData)
 {
+    // Check by exact info:
+    if (auto id = m_samplerLib->getMatchingInstrumentId(m_instrument_vendor.c_str(), m_instrument_name.c_str()); id != -1) {
+        m_track = m_samplerLib->addTrack(m_sampler, id);
+        return;
+    }
+
+    LOGE() << "Something went wrong; falling back to MPE info.";
     IF_ASSERT_FAILED(m_samplerLib) {
         return;
     }

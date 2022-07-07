@@ -11,7 +11,7 @@ using namespace mu::audio;
 
 static const QString VST_MENU_ITEM_ID("VST3");
 static const QString SOUNDFONTS_MENU_ITEM_ID = QString::fromStdString(mu::trc("playback", "Soundfonts"));
-static const QString MUSE_MENU_ITEM_ID("Muse");
+static const QString MUSE_MENU_ITEM_ID("Muse Sounds");
 
 InputResourceItem::InputResourceItem(QObject* parent)
     : AbstractAudioResourceItem(parent)
@@ -119,13 +119,22 @@ QVariantMap InputResourceItem::buildMuseMenuItem(const ResourceByVendorMap& reso
     QVariantList subItemsByType;
 
     for (const auto& pair : resourcesByVendor) {
+        const QString& vendor = QString::fromStdString(pair.first);
+
+        QVariantList subItemsByVendor;
+
         for (const AudioResourceMeta& resourceMeta : pair.second) {
             const QString& resourceId = QString::fromStdString(resourceMeta.id);
-
-            subItemsByType << buildMenuItem(resourceId,
-                                            resourceId,
-                                            m_currentInputParams.resourceMeta.id == resourceMeta.id);
+            subItemsByVendor << buildMenuItem(resourceId,
+                                              resourceId,
+                                              m_currentInputParams.resourceMeta.id == resourceMeta.id);
         }
+
+
+        subItemsByType << buildMenuItem(vendor,
+                                        vendor,
+                                        m_currentInputParams.resourceMeta.vendor == pair.first,
+                                        subItemsByVendor);
     }
 
     return buildMenuItem(MUSE_MENU_ITEM_ID,
