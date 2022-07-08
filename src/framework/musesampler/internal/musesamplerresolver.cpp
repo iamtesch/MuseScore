@@ -46,7 +46,6 @@ ISynthesizerPtr MuseSamplerResolver::resolveSynth(const audio::TrackId trackId, 
 
     if (search != m_samplersMap.cend()) {
         // Update the sounds:
-        // TODO: this isn't pretty, but we lose the relevant bits here when "setupSound" is called.
         auto msw = dynamic_cast<MuseSamplerWrapper*>(search->second.get());
         if (msw != nullptr)
             msw->resetAudioParams(params);

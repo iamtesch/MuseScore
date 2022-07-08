@@ -478,8 +478,7 @@ double MuseSamplerWrapper::dynamicLevelRatio(const mpe::dynamic_level_t level) c
     while (level_it != last_level) {
         if (level >= prev_level->first && level <= level_it->first)
         {
-            auto alpha = (level - prev_level->first) / (level_it->first - prev_level->first);
-            LOGD() << alpha * level_it->second + (1.0 - alpha) * prev_level->second;
+            auto alpha = static_cast<double>(level - prev_level->first) / static_cast<double>(level_it->first - prev_level->first);
             return alpha * level_it->second + (1.0 - alpha) * prev_level->second;
         }
         prev_level = level_it;
