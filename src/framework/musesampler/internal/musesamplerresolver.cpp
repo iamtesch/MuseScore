@@ -61,17 +61,7 @@ ISynthesizerPtr MuseSamplerResolver::resolveSynth(const audio::TrackId trackId, 
 
 bool MuseSamplerResolver::hasCompatibleResources(const audio::PlaybackSetupData& setup) const
 {
-    return true;
-    if (!m_libHandler) {
-        return false;
-    }
-
-    if (!setup.musicXmlSoundId.has_value()) {
-        return false;
-    }
-
-    auto mpe_id = mpe::MpeIdToString(setup.id, setup.category, setup.subCategorySet);
-    return m_libHandler->containsInstrument(mpe_id.c_str(), setup.musicXmlSoundId->c_str());
+    return true; // We provide a full list for everything...
 }
 
 AudioResourceMetaList MuseSamplerResolver::resolveResources() const
@@ -83,12 +73,13 @@ AudioResourceMetaList MuseSamplerResolver::resolveResources() const
     {
         const char* internalName = m_libHandler->getInstrumentName(instrument);
         const char* internalCategory = m_libHandler->getInstrumentCategory(instrument);
+        const char* instrumentPack = m_libHandler->getInstrumentPackage(instrument);
 
         result.push_back(
         {
-            internalName, // id
+            std::string(internalCategory) + "\\" + internalName, // id
             AudioResourceType::MuseSamplerSoundPack, // type
-            internalCategory, // vendor
+            instrumentPack, // vendor
             /*hasNativeEditorSupport*/ false
         });
     }

@@ -87,8 +87,7 @@ static const std::unordered_map<mpe::ArticulationType, ms_NoteArticulation> ARTI
 };
 
 MuseSamplerWrapper::MuseSamplerWrapper(MuseSamplerLibHandlerPtr samplerLib, const audio::AudioSourceParams& params)
-    : AbstractSynthesizer(params), m_samplerLib(samplerLib), m_instrument_vendor(params.resourceMeta.vendor),
-      m_instrument_name(params.resourceMeta.id)
+    : AbstractSynthesizer(params), m_samplerLib(samplerLib)
 {
     if (!m_samplerLib || !m_samplerLib->isValid()) {
         return;
@@ -97,10 +96,11 @@ MuseSamplerWrapper::MuseSamplerWrapper(MuseSamplerLibHandlerPtr samplerLib, cons
     m_samplerLib->initLib();
 }
 
+// Note -- this is a hack!  How can we change the parameters of a synth?  Or do we have to unload and create a new one?
 void MuseSamplerWrapper::resetAudioParams(const audio::AudioSourceParams& params)
 {
-    m_instrument_vendor = params.resourceMeta.vendor;
-    m_instrument_name = params.resourceMeta.id;
+    m_params.resourceMeta.id = params.resourceMeta.id;
+    m_params.resourceMeta.vendor = params.resourceMeta.vendor;
 }
 
 MuseSamplerWrapper::~MuseSamplerWrapper()
@@ -192,9 +192,12 @@ bool MuseSamplerWrapper::isValid() const
 void MuseSamplerWrapper::setupSound(const mpe::PlaybackSetupData& setupData)
 {
     // Check by exact info:
-    if (auto id = m_samplerLib->getMatchingInstrumentId(m_instrument_vendor.c_str(), m_instrument_name.c_str()); id != -1) {
-        m_track = m_samplerLib->addTrack(m_sampler, id);
-        return;
+    if (auto pos = params().resourceMeta.id.find_first_of('\\'); pos != std::string::npos) {
+        auto name = params().resourceMeta.id.substr(pos + 1);
+        if (auto id = m_samplerLib->getMatchingInstrumentId(params().resourceMeta.vendor.c_str(), name.c_str()); id != -1) {
+            m_track = m_samplerLib->addTrack(m_sampler, id);
+            return;
+        }
     }
 
     LOGE() << "Something went wrong; falling back to MPE info.";

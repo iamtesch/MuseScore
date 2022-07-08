@@ -96,6 +96,11 @@ void InputResourceItem::setParams(const audio::AudioInputParams& newParams)
 
 QString InputResourceItem::title() const
 {
+    if (m_currentInputParams.type() == mu::audio::AudioSourceType::MuseSampler)
+    {
+        if (auto pos = m_currentInputParams.resourceMeta.id.find_first_of('\\'); pos != std::string::npos)
+            return QString::fromStdString(m_currentInputParams.resourceMeta.id.substr(pos + 1));
+    }
     return QString::fromStdString(m_currentInputParams.resourceMeta.id);
 }
 
@@ -116,6 +121,9 @@ bool InputResourceItem::hasNativeEditorSupport() const
 
 QVariantMap InputResourceItem::buildMuseMenuItem(const ResourceByVendorMap& resourcesByVendor) const
 {
+    std::string currentCategory;
+    if (auto pos = m_currentInputParams.resourceMeta.id.find_first_of('\\'); pos != std::string::npos) 
+        currentCategory = m_currentInputParams.resourceMeta.id.substr(0, pos);
     QVariantList subItemsByType;
 
     for (const auto& pair : resourcesByVendor) {
@@ -123,13 +131,32 @@ QVariantMap InputResourceItem::buildMuseMenuItem(const ResourceByVendorMap& reso
 
         QVariantList subItemsByVendor;
 
+        std::map<std::string, std::vector<std::pair<std::string, const AudioResourceMeta*>>> categoryMap;
         for (const AudioResourceMeta& resourceMeta : pair.second) {
-            const QString& resourceId = QString::fromStdString(resourceMeta.id);
-            subItemsByVendor << buildMenuItem(resourceId,
-                                              resourceId,
-                                              m_currentInputParams.resourceMeta.id == resourceMeta.id);
+            // Split at "\":
+            if (auto pos = resourceMeta.id.find_first_of('\\'); pos != std::string::npos)
+                categoryMap[resourceMeta.id.substr(0, pos)].push_back({resourceMeta.id.substr(pos + 1), &resourceMeta});
         }
 
+        for (const auto& category : categoryMap)
+        {
+            QVariantList subItemsByCategory;
+            for (auto& inst : category.second)
+            {
+                const QString& instName = QString::fromStdString(inst.first);
+                std::string myId = category.first + '\\' + inst.first;
+                const QString& instId = QString::fromStdString(myId);
+                subItemsByCategory << buildMenuItem(instId,
+                                                    instName,
+                                                    m_currentInputParams.resourceMeta.id == myId);
+            }
+
+            const QString& categoryString = QString::fromStdString(category.first);
+            subItemsByVendor << buildMenuItem(categoryString,
+                                              categoryString,
+                                              currentCategory == category.first,
+                                              subItemsByCategory);
+        }
 
         subItemsByType << buildMenuItem(vendor,
                                         vendor,

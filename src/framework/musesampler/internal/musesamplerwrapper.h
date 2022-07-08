@@ -78,9 +78,6 @@ protected:
     ms_Track m_track = nullptr;
     ms_OutputBuffer m_bus;
 
-    std::string m_instrument_vendor;
-    std::string m_instrument_name;
-
     audio::samples_t m_currentPosition = 0;
 };
 
