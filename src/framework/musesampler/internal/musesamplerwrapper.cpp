@@ -446,28 +446,40 @@ int MuseSamplerWrapper::pitchIndex(const mpe::pitch_level_t pitchLevel) const
 
 double MuseSamplerWrapper::dynamicLevelRatio(const mpe::dynamic_level_t level) const
 {
-    // Use erf to smoothly scale between min and max, with main part as roughly linear from pp to ff
     static constexpr mpe::dynamic_level_t MIN_SUPPORTED_LEVEL = mpe::dynamicLevelFromType(mpe::DynamicType::ppppppppp);
     static constexpr mpe::dynamic_level_t MAX_SUPPORTED_LEVEL = mpe::dynamicLevelFromType(mpe::DynamicType::fffffffff);
 
-    // Range when mapping with erf
-    static constexpr double MIN_X = -3.0;
-    static constexpr double MAX_X = 3.0;
+    // Piecewise linear simple scaling to expected MuseSampler values:
+    static const std::list<std::pair<mpe::dynamic_level_t, double>> conversionMap = {
+        { MIN_SUPPORTED_LEVEL, 0.0 },
+        { mpe::dynamicLevelFromType(mpe::DynamicType::ppppp), 1.0 / 127.0 },
+        { mpe::dynamicLevelFromType(mpe::DynamicType::pppp), 2.0 / 127.0 },
+        { mpe::dynamicLevelFromType(mpe::DynamicType::ppp), 4.0 / 127.0 },
+        { mpe::dynamicLevelFromType(mpe::DynamicType::pp), 8.0 / 127.0 },
+        { mpe::dynamicLevelFromType(mpe::DynamicType::p), 16.0 / 127.0 },
+        { mpe::dynamicLevelFromType(mpe::DynamicType::mp), 32.0 / 127.0 },
+        { mpe::dynamicLevelFromType(mpe::DynamicType::mf), 64.0 / 127.0 },
+        { mpe::dynamicLevelFromType(mpe::DynamicType::f), 96.0 / 127.0 },
+        { mpe::dynamicLevelFromType(mpe::DynamicType::ff), 120.0 / 127.0 },
+        { mpe::dynamicLevelFromType(mpe::DynamicType::fff), 127.0 / 127.0 },
+        { MAX_SUPPORTED_LEVEL, 127.0 / 127.0 }
+    };
 
-    // Scaled value is between MIN_X and MAX_X
-    mpe::dynamic_level_t range = MAX_SUPPORTED_LEVEL - MIN_SUPPORTED_LEVEL;
-    mpe::dynamic_level_t diff = level - MIN_SUPPORTED_LEVEL;
-    double scaled_val = (diff / static_cast<double>(range)) * (MAX_X - MIN_X) + MIN_X;
-    if (level <= MIN_SUPPORTED_LEVEL) {
-        scaled_val = MIN_X;
+    auto prev_level = conversionMap.begin();
+    auto last_level = conversionMap.end();
+    auto level_it = std::next(prev_level);
+    while (level_it != last_level) {
+        if (level >= prev_level->first && level <= level_it->first)
+        {
+            auto alpha = (level - prev_level->first) / (level_it->first - prev_level->first);
+            LOGD() << alpha * level_it->second + (1.0 - alpha) * prev_level->second;
+            return alpha * level_it->second + (1.0 - alpha) * prev_level->second;
+        }
+        prev_level = level_it;
+        level_it = std::next(level_it);
     }
-
-    if (level >= MAX_SUPPORTED_LEVEL) {
-        scaled_val = MAX_X;
-    }
-
-    // Now use erf to scale
-    return 0.5 + erf(scaled_val) * 0.5;
+    LOGE() << "Out of range dynamic value found!";
+    return 48.0 / 127.0;
 }
 
 ms_NoteArticulation MuseSamplerWrapper::convertArticulationType(mpe::ArticulationType articulation) const
