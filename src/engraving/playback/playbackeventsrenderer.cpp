@@ -129,7 +129,7 @@ void PlaybackEventsRenderer::renderMetronome(const Score* score, const int posit
                                                            durationFromTicks(bps.val, ticksPerBeat, ticksPerBeat),
                                                            0,
                                                            eventPitchLevel,
-                                                           dynamicLevelFromType(mpe::DynamicType::Natural),
+                                                           dynamicLevelFromType(mpe::DynamicType::mf),
                                                            emptyArticulations));
     }
 }

@@ -304,7 +304,6 @@ enum class DynamicType {
     pp = 35 * ONE_PERCENT,
     p = 40 * ONE_PERCENT,
     mp = 45 * ONE_PERCENT,
-    Natural = 50 * ONE_PERCENT,
     mf = 55 * ONE_PERCENT,
     f = 60 * ONE_PERCENT,
     ff = 65 * ONE_PERCENT,
@@ -736,7 +735,7 @@ private:
 
         for (auto it = cbegin(); it != cend(); ++it) {
             dynamic_level_t amplitudeDynamicLevel = it->second.appliedPatternSegment.expressionPattern.maxAmplitudeLevel();
-            dynamic_level_t dynamicLevelOffset = std::abs(amplitudeDynamicLevel - dynamicLevelFromType(DynamicType::Natural));
+            dynamic_level_t dynamicLevelOffset = std::abs(amplitudeDynamicLevel - dynamicLevelFromType(DynamicType::mf));
 
             if (dynamicLevelOffset != 0) {
                 dynamicChangesCount++;

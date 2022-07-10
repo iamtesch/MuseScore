@@ -47,7 +47,7 @@ dynamic_level_t PlaybackContext::appliableDynamicLevel(const int nominalPosition
         }
     }
 
-    return mpe::dynamicLevelFromType(mpe::DynamicType::Natural);
+    return mpe::dynamicLevelFromType(mpe::DynamicType::mp) * 0.5 + mpe::dynamicLevelFromType(mpe::DynamicType::mf) * 0.5;
 }
 
 ArticulationType PlaybackContext::persistentArticulationType(const int nominalPositionTick) const
@@ -93,7 +93,7 @@ DynamicLevelMap PlaybackContext::dynamicLevelMap(const Score* score) const
     }
 
     if (result.empty()) {
-        result.emplace(0, mpe::dynamicLevelFromType(mpe::DynamicType::Natural));
+        result.emplace(0, mpe::dynamicLevelFromType(mpe::DynamicType::mp) * 0.5 + mpe::dynamicLevelFromType(mpe::DynamicType::mf) * 0.5);
     }
 
     return result;
@@ -104,7 +104,7 @@ dynamic_level_t PlaybackContext::nominalDynamicLevel(const int positionTick) con
     auto search = m_dynamicsMap.find(positionTick);
 
     if (search == m_dynamicsMap.cend()) {
-        return mpe::dynamicLevelFromType(mpe::DynamicType::Natural);
+        return mpe::dynamicLevelFromType(mpe::DynamicType::mp) * 0.5 + mpe::dynamicLevelFromType(mpe::DynamicType::mf) * 0.5;
     }
 
     return search->second;
