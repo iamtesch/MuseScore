@@ -38,10 +38,8 @@ struct DynamicTransition {
     }
 };
 
-inline mpe::dynamic_level_t dynamicLevelFromType(const DynamicType type,
-                                                 const mpe::dynamic_level_t defLevel = mpe::dynamicLevelFromType(mpe::DynamicType::mf))
-{
-    static const std::unordered_map<DynamicType, mpe::dynamic_level_t> DYNAMIC_LEVELS = {
+inline std::optional<mpe::dynamic_level_t> optionalDynamicLevelFromType(const DynamicType type) {
+  static const std::unordered_map<DynamicType, mpe::dynamic_level_t> DYNAMIC_LEVELS = {
         { DynamicType::PPPPPP, mpe::dynamicLevelFromType(mpe::DynamicType::pppppp) },
         { DynamicType::PPPPP, mpe::dynamicLevelFromType(mpe::DynamicType::ppppp) },
         { DynamicType::PPPP, mpe::dynamicLevelFromType(mpe::DynamicType::pppp) },
@@ -72,29 +70,41 @@ inline mpe::dynamic_level_t dynamicLevelFromType(const DynamicType type,
         return search->second;
     }
 
+    return std::nullopt;
+}
+
+inline mpe::dynamic_level_t dynamicLevelFromType(const DynamicType type,
+                                                 const mpe::dynamic_level_t defLevel = mpe::dynamicLevelFromType(mpe::DynamicType::mf))
+{
+    auto res = optionalDynamicLevelFromType(type);
+    if (res.has_value()) {
+        return *res;
+    }
+
     return defLevel;
 }
 
 inline mpe::dynamic_level_t dynamicLevelRangeByTypes(const DynamicType dynamicTypeFrom,
                                                      const DynamicType dynamicTypeTo,
                                                      const mpe::dynamic_level_t nominalDynamicLevelFrom,
-                                                     const mpe::dynamic_level_t nominalDynamicLevelTo, const bool isCrescendo)
+                                                     const std::optional<mpe::dynamic_level_t> nominalDynamicLevelTo,
+                                                     const bool isCrescendo)
 {
     mpe::dynamic_level_t dynamicLevelFrom = 0;
     mpe::dynamic_level_t dynamicLevelTo = 0;
 
     dynamicLevelFrom = dynamicLevelFromType(dynamicTypeFrom, nominalDynamicLevelFrom);
 
-    //mpe::dynamic_level_t defaultStep = mpe::DYNAMIC_LEVEL_STEP;
-    //if (!isCrescendo) {
-    //    defaultStep = 0;
-    //}
+    mpe::dynamic_level_t defaultStep = mpe::DYNAMIC_LEVEL_STEP;
+    if (!isCrescendo) {
+        defaultStep = 0;
+    }
 
-    //if (nominalDynamicLevelTo == mpe::dynamicLevelFromType(mpe::DynamicType::mf)) {
-    //    dynamicLevelTo = dynamicLevelFromType(dynamicTypeTo, dynamicLevelFrom + defaultStep);
-    //} else {
-        dynamicLevelTo = dynamicLevelFromType(dynamicTypeTo, nominalDynamicLevelTo);
-    //}
+    if (!nominalDynamicLevelTo.has_value()) {
+        dynamicLevelTo = dynamicLevelFromType(dynamicTypeTo, dynamicLevelFrom + defaultStep);
+    } else {
+        dynamicLevelTo = dynamicLevelFromType(dynamicTypeTo, *nominalDynamicLevelTo);
+    }
 
     return dynamicLevelTo - dynamicLevelFrom;
 }
