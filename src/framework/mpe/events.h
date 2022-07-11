@@ -209,7 +209,7 @@ private:
 
         m_expressionCtx.expressionCurve = appliedOffsetMap;
 
-        constexpr dynamic_level_t naturalDynamicLevel = dynamicLevelFromType(DynamicType::mp) * 0.5 + dynamicLevelFromType(DynamicType::mf) * 0.5;
+        constexpr dynamic_level_t naturalDynamicLevel = dynamicLevelFromType(DynamicType::mf);
 
         float dynamicAmplifyFactor = static_cast<float>(articulationDynamicLevel - naturalDynamicLevel) / DYNAMIC_LEVEL_STEP;
 

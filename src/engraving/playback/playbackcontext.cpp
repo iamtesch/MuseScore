@@ -47,7 +47,7 @@ dynamic_level_t PlaybackContext::appliableDynamicLevel(const int nominalPosition
         }
     }
 
-    return mpe::dynamicLevelFromType(mpe::DynamicType::mp) * 0.5 + mpe::dynamicLevelFromType(mpe::DynamicType::mf) * 0.5;
+    return mpe::dynamicLevelFromType(mpe::DynamicType::mf);
 }
 
 ArticulationType PlaybackContext::persistentArticulationType(const int nominalPositionTick) const

@@ -97,7 +97,7 @@ inline mpe::dynamic_level_t dynamicLevelRangeByTypes(const DynamicType dynamicTy
 
     mpe::dynamic_level_t defaultStep = mpe::DYNAMIC_LEVEL_STEP;
     if (!isCrescendo) {
-        defaultStep = 0;
+        defaultStep = -mpe::DYNAMIC_LEVEL_STEP;
     }
 
     if (!nominalDynamicLevelTo.has_value()) {
