@@ -47,7 +47,7 @@ dynamic_level_t PlaybackContext::appliableDynamicLevel(const int nominalPosition
         }
     }
 
-    return mpe::dynamicLevelFromType(mpe::DynamicType::Natural);
+    return mpe::dynamicLevelFromType(mpe::DynamicType::mf);
 }
 
 ArticulationType PlaybackContext::persistentArticulationType(const int nominalPositionTick) const
@@ -93,18 +93,18 @@ DynamicLevelMap PlaybackContext::dynamicLevelMap(const Score* score) const
     }
 
     if (result.empty()) {
-        result.emplace(0, mpe::dynamicLevelFromType(mpe::DynamicType::Natural));
+        result.emplace(0, mpe::dynamicLevelFromType(mpe::DynamicType::mp) * 0.5 + mpe::dynamicLevelFromType(mpe::DynamicType::mf) * 0.5);
     }
 
     return result;
 }
 
-dynamic_level_t PlaybackContext::nominalDynamicLevel(const int positionTick) const
+std::optional<dynamic_level_t> PlaybackContext::nominalDynamicLevel(const int positionTick) const
 {
     auto search = m_dynamicsMap.find(positionTick);
 
     if (search == m_dynamicsMap.cend()) {
-        return mpe::dynamicLevelFromType(mpe::DynamicType::Natural);
+        return std::nullopt;
     }
 
     return search->second;
@@ -185,7 +185,11 @@ void PlaybackContext::handleSpanners(const ID partId, const Score* score)
         DynamicType dynamicTypeTo = hairpin->dynamicTypeTo();
 
         dynamic_level_t nominalLevelFrom = dynamicLevelFromType(dynamicTypeFrom, appliableDynamicLevel(spannerFrom));
-        dynamic_level_t nominalLevelTo = dynamicLevelFromType(dynamicTypeTo, nominalDynamicLevel(spannerTo));
+        auto spannerToDynLevel = nominalDynamicLevel(spannerTo);
+        std::optional<dynamic_level_t> nominalLevelTo;
+        // If end is undefined in score map, allow it to be determined by the "dynamicLevelRangeByTypes" function
+        if (spannerToDynLevel.has_value())
+            nominalLevelTo = dynamicLevelFromType(dynamicTypeTo, *spannerToDynLevel);
 
         dynamic_level_t overallDynamicRange = dynamicLevelRangeByTypes(dynamicTypeFrom,
                                                                        dynamicTypeTo,
