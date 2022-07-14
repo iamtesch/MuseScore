@@ -24,6 +24,7 @@
 
 #include "log.h"
 
+#include "musesamplerutils.h"
 #include "musesamplerwrapper.h"
 #include "soundid_stringify.h"
 
@@ -70,13 +71,14 @@ AudioResourceMetaList MuseSamplerResolver::resolveResources() const
     auto instrumentList = m_libHandler->getInstrumentList();
     while (auto instrument = m_libHandler->getNextInstrument(instrumentList))
     {
+        int uniqueId = m_libHandler->getInstrumentId(instrument);
         const char* internalName = m_libHandler->getInstrumentName(instrument);
         const char* internalCategory = m_libHandler->getInstrumentCategory(instrument);
         const char* instrumentPack = m_libHandler->getInstrumentPackage(instrument);
 
         result.push_back(
         {
-            std::string(internalCategory) + "\\" + internalName, // id
+            buildMuseInstrumentId(internalCategory, internalName, uniqueId), // id
             AudioResourceType::MuseSamplerSoundPack, // type
             instrumentPack, // vendor
             /*hasNativeEditorSupport*/ false
