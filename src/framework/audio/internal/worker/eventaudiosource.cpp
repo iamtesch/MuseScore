@@ -123,7 +123,7 @@ void EventAudioSource::seek(const msecs_t newPositionMsecs)
         return;
     }
 
-    m_synth->seek(newPositionMsecs);
+    m_synth->setPlaybackPosition(newPositionMsecs);
     m_synth->revokePlayingNotes();
 }
 
