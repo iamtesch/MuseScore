@@ -330,7 +330,7 @@ msecs_t FluidSynth::playbackPosition() const
     return m_sequencer.playbackPosition();
 }
 
-void FluidSynth::seek(const msecs_t newPosition)
+void FluidSynth::setPlaybackPosition(const msecs_t newPosition)
 {
     m_sequencer.setPlaybackPosition(newPosition);
 }

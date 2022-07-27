@@ -154,7 +154,7 @@ audio::msecs_t mu::audio::synth::AbstractSynthesizer::playbackPosition() const
     return m_playbackPosition;
 }
 
-void AbstractSynthesizer::seek(const msecs_t newPosition)
+void AbstractSynthesizer::setPlaybackPosition(const msecs_t newPosition)
 {
     ONLY_AUDIO_WORKER_THREAD;
 

@@ -261,9 +261,9 @@ void MuseSamplerWrapper::setupEvents(const mpe::PlaybackData& playbackData)
     });
 }
 
-void MuseSamplerWrapper::seek(const audio::msecs_t newPosition)
+void MuseSamplerWrapper::setPlaybackPosition(const audio::msecs_t newPosition)
 {
-    AbstractSynthesizer::seek(newPosition);
+    AbstractSynthesizer::setPlaybackPosition(newPosition);
 
     setCurrentPosition(msecsToSamples(newPosition, m_sampleRate));
 }

@@ -45,7 +45,7 @@ public:
     async::Channel<audio::AudioInputParams> paramsChanged() const;
 
     virtual msecs_t playbackPosition() const;
-    virtual void seek(const msecs_t newPosition);
+    virtual void setPlaybackPosition(const msecs_t newPosition);
 
     void setup(const mpe::PlaybackData& playbackData);
     virtual void flushSound() = 0;
