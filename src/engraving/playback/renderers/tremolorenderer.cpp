@@ -121,7 +121,11 @@ void TremoloRenderer::buildAndAppendEvents(const Chord* chord, const Articulatio
         noteCtx.duration = stepDuration;
         noteCtx.timestamp += timestampOffset;
 
-        updateArticulationBoundaries(type, noteCtx.timestamp, noteCtx.duration, noteCtx.chordCtx.commonArticulations);
+        updateArticulationBoundaries(type,
+                                     noteCtx.timestamp,
+                                     noteCtx.duration,
+                                     noteCtx.chordCtx.commonArticulations,
+                                     noteIdx == chord->notes().size() - 1);
         result.emplace_back(buildNoteEvent(std::move(noteCtx)));
     }
 }

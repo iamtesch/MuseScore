@@ -301,8 +301,11 @@ void OrnamentsRenderer::createEvents(const ArticulationType type, NominalNoteCtx
             subNoteCtx.duration = durationStep;
             subNoteCtx.pitchLevel += pitchOffsets.at(alterationSubNoteIdx);
 
+            bool isLast = (alterationStep == alterationsCount - 1) && (alterationSubNoteIdx == pitchOffsets.size() - 1);
+
             updateArticulationBoundaries(type, subNoteCtx.timestamp,
-                                         subNoteCtx.duration, subNoteCtx.chordCtx.commonArticulations);
+                                         subNoteCtx.duration, subNoteCtx.chordCtx.commonArticulations,
+                                         isLast);
 
             result.emplace_back(buildNoteEvent(std::move(subNoteCtx)));
 

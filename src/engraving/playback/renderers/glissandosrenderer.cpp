@@ -75,7 +75,8 @@ void GlissandosRenderer::renderDiscreteGlissando(const Note* note, const Renderi
         updateArticulationBoundaries(ArticulationType::DiscreteGlissando,
                                      noteCtx.timestamp,
                                      noteCtx.duration,
-                                     noteCtx.chordCtx.commonArticulations);
+                                     noteCtx.chordCtx.commonArticulations,
+                                     i == stepsCount - 1);
 
         result.emplace_back(buildNoteEvent(std::move(noteCtx)));
     }

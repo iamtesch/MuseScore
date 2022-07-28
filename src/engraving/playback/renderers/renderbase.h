@@ -52,12 +52,19 @@ public:
 protected:
     static void updateArticulationBoundaries(const mpe::ArticulationType type, const mpe::timestamp_t nominalTimestamp,
                                              const mpe::duration_t nominalDuration,
-                                             mpe::ArticulationMap& noteArticulationMap)
+                                             mpe::ArticulationMap& noteArticulationMap,
+                                             const bool isLast = false)
     {
         const mpe::ArticulationAppliedData& articulationData = noteArticulationMap.at(type);
 
         mpe::timestamp_t articulationOccupiedFrom = nominalTimestamp - articulationData.meta.timestamp;
-        mpe::timestamp_t articulationOccupiedTo = nominalTimestamp + nominalDuration - articulationData.meta.timestamp;
+
+        mpe::timestamp_t articulationOccupiedTo = 0;
+        if (isLast) {
+            articulationOccupiedTo = articulationData.meta.overallDuration;
+        } else {
+            articulationOccupiedTo = nominalTimestamp + nominalDuration - articulationData.meta.timestamp;
+        }
 
         noteArticulationMap.updateOccupiedRange(type,
                                                 mpe::occupiedPercentage(articulationOccupiedFrom,

@@ -150,7 +150,11 @@ void GraceNotesRenderer::buildGraceNoteEvents(std::vector<NominalNoteCtx>&& note
         noteCtx.duration = RealRound(availableDuration / static_cast<float>(noteCtxList.size()), 0);
         noteCtx.timestamp = timestampFrom + i * noteCtx.duration;
 
-        updateArticulationBoundaries(type, noteCtx.timestamp, noteCtx.duration, noteCtx.chordCtx.commonArticulations);
+        updateArticulationBoundaries(type,
+                                     noteCtx.timestamp,
+                                     noteCtx.duration,
+                                     noteCtx.chordCtx.commonArticulations,
+                                     i == noteCtxList.size() - 1);
 
         result.emplace_back(buildNoteEvent(std::move(noteCtx)));
     }
