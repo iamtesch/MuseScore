@@ -126,6 +126,29 @@ typedef struct ms_NoteEvent
     ms_NoteArticulation _articulation;
 } ms_NoteEvent;
 
+typedef struct ms_AuditionStartNoteEvent
+{
+    int _pitch; // MIDI pitch
+    ms_NoteArticulation _articulation;
+    double _dynamics;
+} ms_AuditionStartNoteEvent;
+
+typedef struct ms_AuditionStopNoteEvent
+{
+    int _pitch; // MIDI pitch
+} ms_AuditionStopNoteEvent;
+
+typedef struct ms_LivePlayStartNoteEvent
+{
+    int _pitch; // MIDI pitch
+    double _dynamics;
+} ms_LivePlayStartNoteEvent;
+
+typedef struct ms_LivePlayStopNoteEvent
+{
+    int _pitch; // MIDI pitch
+} ms_LivePlayStopNoteEvent;
+
 typedef ms_Result (* ms_init)();
 typedef int (* ms_contains_instrument)(const char* mpe_id, const char* musicxml_id);
 typedef int (* ms_get_matching_instrument_id)(const char* pack, const char* name);
@@ -161,8 +184,22 @@ typedef int (* ms_MuseSampler_is_ranged_articulation)(ms_NoteArticulation);
 typedef ms_Result (* ms_MuseSampler_add_track_event_range_start)(ms_MuseSampler, ms_Track, int voice, ms_NoteArticulation);
 typedef ms_Result (* ms_MuseSampler_add_track_event_range_end)(ms_MuseSampler, ms_Track, int voice, ms_NoteArticulation);
 
-typedef ms_Result (* ms_MuseSampler_process)(ms_MuseSampler, ms_OutputBuffer, long long micros);
-typedef void (* ms_MuseSampler_set_position)(ms_MuseSampler, long long micros);
+typedef ms_Result (* ms_MuseSampler_start_audition_mode)(ms_MuseSampler ms);
+typedef ms_Result (* ms_MuseSampler_stop_audition_mode)(ms_MuseSampler ms);
+typedef ms_Result (* ms_MuseSampler_start_audition_note)(ms_MuseSampler ms, ms_Track track, ms_AuditionStartNoteEvent evt);
+typedef ms_Result (* ms_MuseSampler_stop_audition_note)(ms_MuseSampler ms, ms_Track track, ms_AuditionStopNoteEvent evt);
+
+typedef ms_Result (* ms_MuseSampler_start_liveplay_mode)(ms_MuseSampler ms);
+typedef ms_Result (* ms_MuseSampler_stop_liveplay_mode)(ms_MuseSampler ms);
+typedef ms_Result (* ms_MuseSampler_start_liveplay_note)(ms_MuseSampler ms, ms_Track track, ms_LivePlayStartNoteEvent evt);
+typedef ms_Result (* ms_MuseSampler_stop_liveplay_note)(ms_MuseSampler ms, ms_Track track, ms_LivePlayStopNoteEvent evt);
+
+typedef ms_Result (* ms_MuseSampler_start_offline_mode)(ms_MuseSampler ms, double sample_rate);
+typedef ms_Result (* ms_MuseSampler_stop_offline_mode)(ms_MuseSampler ms);
+typedef ms_Result (* ms_MuseSampler_process_offline)(ms_MuseSampler ms, ms_OutputBuffer buffer);
+
+typedef ms_Result (* ms_MuseSampler_process)(ms_MuseSampler, ms_OutputBuffer, long long samples);
+typedef void (* ms_MuseSampler_set_position)(ms_MuseSampler, long long samples);
 typedef void (* ms_MuseSampler_set_playing)(ms_MuseSampler, int playing);
 
 #endif // MU_MUSESAMPLER_APITYPES_H
