@@ -182,7 +182,8 @@ void MuseSamplerSequencer::addNoteEvent(const mpe::NoteEvent& noteEvent)
     event._location_ms = noteEvent.arrangementCtx().nominalTimestamp / 1000.f; // FIXME Avoid micros -> millis conversion
     event._duration_ms = noteEvent.arrangementCtx().nominalDuration / 1000.f;
     event._pitch = pitchIndex(noteEvent.pitchCtx().nominalPitchLevel);
-    event._tempo = noteEvent.arrangementCtx().bps;
+    // API expects BPM
+    event._tempo = noteEvent.arrangementCtx().bps * 60.0;
     event._articulation = noteArticulationTypes(noteEvent);
 
     for (auto& art : noteEvent.expressionCtx().articulations) {
