@@ -21,28 +21,24 @@
  */
 #include "read302.h"
 
-#include "translation.h"
-#include "style/style.h"
-#include "style/defaultstyle.h"
-#include "rw/xml.h"
 #include "infrastructure/symbolfonts.h"
+#include "rw/xml.h"
+#include "style/style.h"
 
-#include "libmscore/score.h"
-#include "libmscore/staff.h"
-#include "libmscore/part.h"
-#include "libmscore/page.h"
 #include "libmscore/audio.h"
-#include "libmscore/sig.h"
-#include "libmscore/barline.h"
 #include "libmscore/excerpt.h"
-#include "libmscore/spanner.h"
-#include "libmscore/scoreorder.h"
-#include "libmscore/measurebase.h"
-#include "libmscore/masterscore.h"
 #include "libmscore/factory.h"
+#include "libmscore/masterscore.h"
+#include "libmscore/measurebase.h"
+#include "libmscore/page.h"
+#include "libmscore/part.h"
+#include "libmscore/score.h"
+#include "libmscore/scoreorder.h"
+#include "libmscore/spanner.h"
+#include "libmscore/staff.h"
+#include "libmscore/text.h"
 
 #include "../staffrw.h"
-#include "readchordlisthook.h"
 #include "readstyle.h"
 
 #include "log.h"
@@ -239,10 +235,19 @@ bool Read302::readScore302(Score* score, XmlReader& e, ReadContext& ctx)
 
     score->_fileDivision = Constants::division;
 
-    // Make sure every instrument has an instrumentId set.
-    for (Part* part : score->parts()) {
-        for (const auto& pair : part->instruments()) {
-            pair.second->updateInstrumentId();
+    if (score->mscVersion() == 302) {
+        // MuseScore 3.6.x scores had some wrong instrument IDs
+        for (Part* part : score->parts()) {
+            for (const auto& pair : part->instruments()) {
+                fixInstrumentId(pair.second);
+            }
+        }
+    } else {
+        // Older scores had no IDs at all
+        for (Part* part : score->parts()) {
+            for (const auto& pair : part->instruments()) {
+                pair.second->updateInstrumentId();
+            }
         }
     }
 
@@ -284,4 +289,35 @@ Err Read302::read302(MasterScore* masterScore, XmlReader& e, ReadContext& ctx)
     }
 
     return Err::NoError;
+}
+
+void Read302::fixInstrumentId(Instrument* instrument)
+{
+    String id = instrument->id();
+    String trackName = instrument->trackName().toLower();
+
+    // incorrect instrument IDs in 3.6.x
+    if (id == u"Winds") {
+        id = u"winds";
+    } else if (id == u"harmonica-d12high-g") {
+        id = u"harmonica-d10high-g";
+    } else if (id == u"harmonica-d12f") {
+        id = u"harmonica-d10f";
+    } else if (id == u"harmonica-d12d") {
+        id = u"harmonica-d10d";
+    } else if (id == u"harmonica-d12c") {
+        id = u"harmonica-d10c";
+    } else if (id == u"harmonica-d12a") {
+        id = u"harmonica-d10a";
+    } else if (id == u"harmonica-d12-g") {
+        id = u"harmonica-d10g";
+    } else if (id == u"drumset" && trackName == u"percussion") {
+        id = u"percussion";
+    } else if (id == u"cymbal" && trackName == u"cymbals") {
+        id = u"marching-cymbals";
+    } else if (id == u"bass-drum" && trackName == u"bass drums") {
+        id = u"marching-bass-drums";
+    }
+
+    instrument->setId(id);
 }

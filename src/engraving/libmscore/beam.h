@@ -28,12 +28,11 @@
 #include "property.h"
 
 namespace mu::engraving {
-class Factory;
-class ChordRest;
-class MuseScoreView;
 class Chord;
-class System;
+class ChordRest;
+class Factory;
 class Skyline;
+class System;
 
 enum class ActionIconType;
 enum class SpannerSegmentType;
@@ -103,9 +102,9 @@ class Beam final : public EngravingItem
                                       const double endX, bool isFlat, bool isStartDictator) const;
     void offsetBeamWithAnchorShortening(std::vector<ChordRest*> chordRests, int& dictator, int& pointer, int beamCount, int staffLines,
                                         bool isStartDictator, int stemLengthDictator, int stemLengthPointer) const;
-    bool isBeamInsideStaff(int yPos, int staffLines, bool isDictator) const;
+    bool isBeamInsideStaff(int yPos, int staffLines, bool isInner) const;
     int getOuterBeamPosOffset(int innerBeam, int beamCount, int staffLines) const;
-    bool isValidBeamPosition(int yPos, bool isStart, bool isAscending, bool isFlat, int staffLines, int beamCount) const;
+    bool isValidBeamPosition(int yPos, bool isStart, bool isAscending, bool isFlat, int staffLines) const;
     bool is64thBeamPositionException(int& yPos, int staffLines) const;
     int findValidBeamOffset(int outer, int beamCount, int staffLines, bool isStart, bool isAscending, bool isFlat) const;
     void setValidBeamPositions(int& dictator, int& pointer, int beamCount, int staffLines, bool isStartDictator, bool isFlat,

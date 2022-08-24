@@ -29,60 +29,49 @@
 
 #include <assert.h>
 
-#include "translation.h"
 #include "draw/types/brush.h"
 #include "rw/xml.h"
+#include "translation.h"
 #include "types/translatablestring.h"
 #include "types/typesconv.h"
 
 #include "accidental.h"
 #include "actionicon.h"
-#include "arpeggio.h"
 #include "articulation.h"
 #include "bagpembell.h"
+#include "beam.h"
 #include "bend.h"
 #include "chord.h"
 #include "chordline.h"
-#include "clef.h"
 #include "drumset.h"
 #include "factory.h"
 #include "fingering.h"
-#include "fret.h"
 #include "glissando.h"
-#include "hairpin.h"
-#include "harmony.h"
+#include "hook.h"
 #include "image.h"
 #include "linkedobjects.h"
 #include "measure.h"
 #include "mscoreview.h"
 #include "notedot.h"
-#include "page.h"
 #include "part.h"
 #include "pitchspelling.h"
 #include "score.h"
-#include "symbolfont.h"
 #include "segment.h"
-#include "slur.h"
 #include "spanner.h"
 #include "staff.h"
 #include "stafftype.h"
 #include "stringdata.h"
-#include "system.h"
-#include "text.h"
-#include "textline.h"
+#include "symbolfont.h"
 #include "tie.h"
 #include "tremolo.h"
-#include "tuplet.h"
 #include "undo.h"
 #include "utils.h"
-#include "hook.h"
 
 #ifndef ENGRAVING_NO_ACCESSIBILITY
 #include "accessibility/accessibleitem.h"
 #include "accessibility/accessibleroot.h"
 #endif
 
-#include "config.h"
 #include "log.h"
 
 using namespace mu;
@@ -1401,7 +1390,7 @@ void Note::draw(mu::draw::Painter* painter) const
                     view->drawBackground(painter, bb);
                 }
             } else {
-                painter->fillRect(bb, mu::draw::Color::white);
+                painter->fillRect(bb, engravingConfiguration()->noteBackgroundColor());
             }
 
             if (fretConflict() && !score()->printing() && score()->showUnprintable()) {                //on fret conflict, draw on red background
@@ -1439,7 +1428,7 @@ void Note::draw(mu::draw::Painter* painter) const
         // draw blank notehead to avoid staff and ledger lines
         if (_cachedSymNull != SymId::noSym) {
             painter->save();
-            painter->setPen(mu::draw::Color::white);
+            painter->setPen(engravingConfiguration()->noteBackgroundColor());
             drawSymbol(_cachedSymNull, painter);
             painter->restore();
         }

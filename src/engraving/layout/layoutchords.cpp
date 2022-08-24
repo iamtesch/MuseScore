@@ -24,16 +24,19 @@
 #include "containers.h"
 
 #include "libmscore/accidental.h"
+#include "libmscore/beam.h"
 #include "libmscore/chord.h"
+#include "libmscore/glissando.h"
 #include "libmscore/hook.h"
+#include "libmscore/measure.h"
 #include "libmscore/note.h"
+#include "libmscore/part.h"
 #include "libmscore/score.h"
 #include "libmscore/segment.h"
 #include "libmscore/staff.h"
+#include "libmscore/stem.h"
 #include "libmscore/stemslash.h"
 #include "libmscore/tie.h"
-#include "libmscore/glissando.h"
-#include "libmscore/part.h"
 
 using namespace mu::engraving;
 
@@ -1216,8 +1219,9 @@ void LayoutChords::updateGraceNotes(Measure* measure)
         for (unsigned track = 0; track < score->staves().size() * VOICES; ++track) {
             EngravingItem* e = s.preAppendedItem(track);
             if (e && e->isGraceNotesGroup()) {
-                toGraceNotesGroup(e)->layout();
-                s.createShape(track2staff(track));
+                GraceNotesGroup* gng = toGraceNotesGroup(e);
+                gng->layout();
+                s.staffShape(track2staff(track)).add(gng->shape().translated(gng->pos()));
             }
         }
     }
